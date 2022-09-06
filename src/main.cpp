@@ -66,34 +66,13 @@ int main(void) {
   (x >= PEN_SIZE + OFFSET + 3 && x <= gdispGetWidth() && y >= COLOR_SIZE + OFFSET + 3 && y <= gdispGetHeight())
 
 void drawScreen() {
-  gdispClear(GFX_RED);
-
-  char* msg = "uGFX";
-  gFont font1, font2;
-
-  font1 = gdispOpenFont("DejaVuSans24*");
-  font2 = gdispOpenFont("DejaVuSans12*");
-
-  gdispClear(GFX_WHITE);
-  gdispDrawString(gdispGetWidth() - gdispGetStringWidth(msg, font1) - 3, 3, msg, font1, GFX_BLACK);
-
-  /* colors */
-  gdispFillArea(0 * COLOR_SIZE + 3, 3, COLOR_SIZE, COLOR_SIZE, GFX_BLACK);  /* Black */
-  gdispFillArea(1 * COLOR_SIZE + 3, 3, COLOR_SIZE, COLOR_SIZE, GFX_RED);    /* Red */
-  gdispFillArea(2 * COLOR_SIZE + 3, 3, COLOR_SIZE, COLOR_SIZE, GFX_YELLOW); /* Yellow */
-  gdispFillArea(3 * COLOR_SIZE + 3, 3, COLOR_SIZE, COLOR_SIZE, GFX_GREEN);  /* Green */
-  gdispFillArea(4 * COLOR_SIZE + 3, 3, COLOR_SIZE, COLOR_SIZE, GFX_BLUE);   /* Blue */
-  gdispDrawBox(5 * COLOR_SIZE + 3, 3, COLOR_SIZE, COLOR_SIZE, GFX_WHITE);   /* White */
-
-  /* pens */
-  gdispFillStringBox(OFFSET * 2, DRAW_PEN(1), PEN_SIZE, PEN_SIZE, "1", font2, GFX_WHITE, GFX_BLACK, gJustifyCenter);
-  gdispFillStringBox(OFFSET * 2, DRAW_PEN(2), PEN_SIZE, PEN_SIZE, "2", font2, GFX_WHITE, GFX_BLACK, gJustifyCenter);
-  gdispFillStringBox(OFFSET * 2, DRAW_PEN(3), PEN_SIZE, PEN_SIZE, "3", font2, GFX_WHITE, GFX_BLACK, gJustifyCenter);
-  gdispFillStringBox(OFFSET * 2, DRAW_PEN(4), PEN_SIZE, PEN_SIZE, "4", font2, GFX_WHITE, GFX_BLACK, gJustifyCenter);
-  gdispFillStringBox(OFFSET * 2, DRAW_PEN(5), PEN_SIZE, PEN_SIZE, "5", font2, GFX_WHITE, GFX_BLACK, gJustifyCenter);
-
-  gdispCloseFont(font1);
-  gdispCloseFont(font2);
+  gdispImage myImage{};
+  gCoord swidth, sheight;
+  swidth = gdispGetWidth();
+  sheight = gdispGetHeight();
+  gdispImageOpenFile(&myImage, "test-pal8.bmp");
+  gdispImageDraw(&myImage, 25, 120, swidth, sheight, 0, 0);
+  gdispImageClose(&myImage);
 }
 
 extern "C" void uGFXMain() {
