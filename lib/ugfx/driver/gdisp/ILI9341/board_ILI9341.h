@@ -15,17 +15,65 @@
 extern "C" {
 #endif
 
-extern void init_board(GDisplay* g);
-extern void post_init_board(GDisplay* g);
-extern void setpin_reset(GDisplay* g, gBool state);
-extern void set_backlight(GDisplay* g, gU8 percent);
-extern void acquire_bus(GDisplay* g);
-extern void release_bus(GDisplay* g);
-extern void write_index(GDisplay* g, gU16 index);
-extern void write_data(GDisplay* g, gU16 data);
-extern void setreadmode(GDisplay* g);
-extern void setwritemode(GDisplay* g);
-extern gU16 read_data(GDisplay* g);
+static const uint32_t LCD_MEM_CMD = 0x60000000, LCD_MEM_DATA = 0x60080000;
+
+static GFXINLINE void LCD_write_cmd(uint16_t cmd) {
+  *(volatile uint16_t*)(LCD_MEM_CMD) = cmd;
+}
+static GFXINLINE void LCD_write_data(uint16_t data) {
+  *(volatile uint16_t*)(LCD_MEM_DATA) = data;
+}
+static GFXINLINE uint16_t LCD_read_data() {
+  return *(volatile uint16_t*)(LCD_MEM_DATA);
+}
+
+
+extern void LCD_set_backlight(GDisplay* g, gU8 percent);
+
+
+static GFXINLINE void set_backlight(GDisplay* g, gU8 percent) {
+    LCD_set_backlight(g, percent);
+}
+static GFXINLINE void write_index(GDisplay* g, gU16 index){
+  LCD_write_cmd(index);
+}
+static GFXINLINE void write_data(GDisplay* g, gU16 data){
+  LCD_write_data(data);
+}
+static GFXINLINE gU16 read_data(GDisplay* g){
+  return LCD_read_data();
+}
+
+// Rest is unused
+
+static GFXINLINE void init_board(GDisplay* g) {
+  // FSMC init done in main.cpp
+  return;
+}
+static GFXINLINE void post_init_board(GDisplay* g){
+  // not used
+  return;
+}
+static GFXINLINE void setpin_reset(GDisplay* g, gBool state) {
+    // no reset pin
+    return;
+}
+static GFXINLINE void acquire_bus(GDisplay* g){
+  // nothing else uses bus
+  return;
+}
+static GFXINLINE void release_bus(GDisplay* g){
+  // nothing else uses bus
+  return;
+}
+static GFXINLINE void setreadmode(GDisplay* g){
+  // handled by MCU
+  return;}
+static GFXINLINE void setwritemode(GDisplay* g){
+  // handled by MCU
+  return;
+}
+
 
 
 
