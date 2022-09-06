@@ -51,7 +51,7 @@
 // Some common routines and macros
 #define dummy_read(g)				{ volatile gU16 dummy; dummy = read_data(g); (void) dummy; }
 #define write_reg(g, reg, data)		{ write_index(g, reg); write_data(g, data); }
-#define write_data16(g, data)		{ write_data(g, data >> 8); write_data(g, (gU8)data); }
+#define write_data16(g, data)		{ write_data(g, data); }
 #define delay(us)					gfxSleepMicroseconds(us)
 #define delayms(ms)					gfxSleepMilliseconds(ms)
 

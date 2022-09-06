@@ -78,8 +78,8 @@
 #define GDISP_NEED_AUTOFLUSH                         GFXON
 //#define GDISP_NEED_TIMERFLUSH                        GFXOFF
 //#define GDISP_NEED_VALIDATION                        GFXON
-//#define GDISP_NEED_CLIP                              GFXON
-//#define GDISP_NEED_CIRCLE                            GFXOFF
+#define GDISP_NEED_CLIP                              GFXON
+#define GDISP_NEED_CIRCLE                            GFXON
 //#define GDISP_NEED_DUALCIRCLE                        GFXOFF
 //#define GDISP_NEED_ELLIPSE                           GFXOFF
 //#define GDISP_NEED_ARC                               GFXOFF
@@ -91,11 +91,11 @@
 //#define GDISP_NEED_QUERY                             GFXOFF
 //#define GDISP_NEED_MULTITHREAD                       GFXOFF
 //#define GDISP_NEED_STREAMING                         GFXOFF
-//#define GDISP_NEED_TEXT                              GFXOFF
+#define GDISP_NEED_TEXT                              GFXON
 //    #define GDISP_NEED_TEXT_WORDWRAP                 GFXOFF
 //    #define GDISP_NEED_TEXT_BOXPADLR                 1
 //    #define GDISP_NEED_TEXT_BOXPADTB                 1
-//    #define GDISP_NEED_ANTIALIAS                     GFXOFF
+    #define GDISP_NEED_ANTIALIAS                     GFXON
 //    #define GDISP_NEED_UTF8                          GFXOFF
 //    #define GDISP_NEED_TEXT_KERNING                  GFXOFF
 //    #define GDISP_INCLUDE_FONT_UI1                   GFXOFF
@@ -111,10 +111,10 @@
 //    #define GDISP_INCLUDE_FONT_FIXED_10X20           GFXOFF
 //    #define GDISP_INCLUDE_FONT_FIXED_7X14            GFXOFF
 //    #define GDISP_INCLUDE_FONT_FIXED_5X8             GFXOFF
-//    #define GDISP_INCLUDE_FONT_DEJAVUSANS12_AA       GFXOFF
+    #define GDISP_INCLUDE_FONT_DEJAVUSANS12_AA       GFXON
 //    #define GDISP_INCLUDE_FONT_DEJAVUSANS16_AA       GFXOFF
 //    #define GDISP_INCLUDE_FONT_DEJAVUSANS20_AA       GFXOFF
-//    #define GDISP_INCLUDE_FONT_DEJAVUSANS24_AA       GFXOFF
+    #define GDISP_INCLUDE_FONT_DEJAVUSANS24_AA       GFXON
 //    #define GDISP_INCLUDE_FONT_DEJAVUSANS32_AA       GFXOFF
 //    #define GDISP_INCLUDE_FONT_DEJAVUSANSBOLD12_AA   GFXOFF
 //    #define GDISP_INCLUDE_USER_FONTS                 GFXOFF

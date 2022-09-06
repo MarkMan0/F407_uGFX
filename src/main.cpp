@@ -52,48 +52,54 @@ int main(void) {
 }
 
 
-void mandelbrot(float x1, float y1, float x2, float y2) {
-  unsigned int i, j, width, height;
-  gU16 iter;
-  gColor color;
-  float fwidth, fheight;
+#define COLOR_SIZE 20
+#define PEN_SIZE   20
+#define OFFSET     3
 
-  float sy = y2 - y1;
-  float sx = x2 - x1;
-  const int MAX = 512;
+#define COLOR_BOX(a)  (ev.x >= a && ev.x <= a + COLOR_SIZE)
+#define PEN_BOX(a)    (ev.y >= a && ev.y <= a + COLOR_SIZE)
+#define GET_COLOR(a)  (COLOR_BOX(a * COLOR_SIZE + OFFSET))
+#define GET_PEN(a)    (PEN_BOX(a * 2 * PEN_SIZE + OFFSET))
+#define DRAW_COLOR(a) (a * COLOR_SIZE + OFFSET)
+#define DRAW_PEN(a)   (a * 2 * PEN_SIZE + OFFSET)
+#define DRAW_AREA(x, y)                                                                                                \
+  (x >= PEN_SIZE + OFFSET + 3 && x <= gdispGetWidth() && y >= COLOR_SIZE + OFFSET + 3 && y <= gdispGetHeight())
 
-  width = (unsigned int)gdispGetWidth();
-  height = (unsigned int)gdispGetHeight();
-  fwidth = width;
-  fheight = height;
+void drawScreen() {
+  gdispClear(GFX_RED);
 
-  for (i = 0; i < width; i++) {
-    for (j = 0; j < height; j++) {
-      float cy = j * sy / fheight + y1;
-      float cx = i * sx / fwidth + x1;
-      float x = 0.0f, y = 0.0f, xx = 0.0f, yy = 0.0f;
-      for (iter = 0; iter <= MAX && xx + yy < 4.0f; iter++) {
-        xx = x * x;
-        yy = y * y;
-        y = 2.0f * x * y + cy;
-        x = xx - yy + cx;
-      }
-      color = ((iter << 8) | (iter & 0xFF));
-      gdispDrawPixel(i, j, color);
-    }
-  }
+  char* msg = "uGFX";
+  gFont font1, font2;
+
+  font1 = gdispOpenFont("DejaVuSans24*");
+  font2 = gdispOpenFont("DejaVuSans12*");
+
+  gdispClear(GFX_WHITE);
+  gdispDrawString(gdispGetWidth() - gdispGetStringWidth(msg, font1) - 3, 3, msg, font1, GFX_BLACK);
+
+  /* colors */
+  gdispFillArea(0 * COLOR_SIZE + 3, 3, COLOR_SIZE, COLOR_SIZE, GFX_BLACK);  /* Black */
+  gdispFillArea(1 * COLOR_SIZE + 3, 3, COLOR_SIZE, COLOR_SIZE, GFX_RED);    /* Red */
+  gdispFillArea(2 * COLOR_SIZE + 3, 3, COLOR_SIZE, COLOR_SIZE, GFX_YELLOW); /* Yellow */
+  gdispFillArea(3 * COLOR_SIZE + 3, 3, COLOR_SIZE, COLOR_SIZE, GFX_GREEN);  /* Green */
+  gdispFillArea(4 * COLOR_SIZE + 3, 3, COLOR_SIZE, COLOR_SIZE, GFX_BLUE);   /* Blue */
+  gdispDrawBox(5 * COLOR_SIZE + 3, 3, COLOR_SIZE, COLOR_SIZE, GFX_WHITE);   /* White */
+
+  /* pens */
+  gdispFillStringBox(OFFSET * 2, DRAW_PEN(1), PEN_SIZE, PEN_SIZE, "1", font2, GFX_WHITE, GFX_BLACK, gJustifyCenter);
+  gdispFillStringBox(OFFSET * 2, DRAW_PEN(2), PEN_SIZE, PEN_SIZE, "2", font2, GFX_WHITE, GFX_BLACK, gJustifyCenter);
+  gdispFillStringBox(OFFSET * 2, DRAW_PEN(3), PEN_SIZE, PEN_SIZE, "3", font2, GFX_WHITE, GFX_BLACK, gJustifyCenter);
+  gdispFillStringBox(OFFSET * 2, DRAW_PEN(4), PEN_SIZE, PEN_SIZE, "4", font2, GFX_WHITE, GFX_BLACK, gJustifyCenter);
+  gdispFillStringBox(OFFSET * 2, DRAW_PEN(5), PEN_SIZE, PEN_SIZE, "5", font2, GFX_WHITE, GFX_BLACK, gJustifyCenter);
+
+  gdispCloseFont(font1);
+  gdispCloseFont(font2);
 }
 
 extern "C" void uGFXMain() {
-  float cx, cy;
-  float zoom = 1.0f;
-  cx = -0.086f;
-  cy = 0.85f;
   while (1) {
-    mandelbrot(-2.0f * zoom + cx, -1.5f * zoom + cy, 2.0f * zoom + cx, 1.5f * zoom + cy);
-
-    zoom *= 0.7f;
-    if (zoom <= 0.00000001f) zoom = 1.0f;
+    drawScreen();
+    vTaskDelay(pdMS_TO_TICKS(3000));
   }
 }
 
