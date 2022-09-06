@@ -1,0 +1,14 @@
+{
+    "name": "UGFX",
+    "version": "v2.9",
+    "homepage": "https://ugfx.io/",
+    "description": "UGFX library ported to platformio",
+    "build": {
+      "flags": [
+        "-Isrc/gdisp/mcufont",
+        "-Idriver/gdisp/ILI9341"
+      ],
+      "srcDir": "."
+    }
+  }
+  
