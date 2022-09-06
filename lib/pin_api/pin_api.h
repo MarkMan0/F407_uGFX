@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include "STHAL.h"
 #include <cassert>
 #include <array>
 
@@ -371,5 +372,5 @@ inline void deinit_pin(const pin_name pin) {
 
 /// @brief pin labels on the board
 namespace pins {
-  inline constexpr auto LED0 = PA6, LED1 = PA7, WK_UP = PA0, K0 = PE4, K1 = PE3;
+  inline constexpr auto LED0 = PA6, LED1 = PA7, WK_UP = PA0, K0 = PE4, K1 = PE3, LCD_BL_PIN = PB1;
 }  // namespace pins
