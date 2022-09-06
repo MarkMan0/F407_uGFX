@@ -1,0 +1,22 @@
+{
+    "name": "FreeRTOS_STM",
+    "version": "1",
+    "description": "Freertos as library",
+    "build": {
+        "flags": [
+            "-ISource",
+            "-ISource/include",
+            "-ISource/portable/GCC/ARM_CM4F"
+        ],
+        "unflags": [
+            "-Wunused-variable",
+            "-Wall"
+        ],
+        "srcDir": ".",
+        "srcFilter": [
+            "+<Source/*.c> ",
+            "+<Source/portable/GCC/ARM_CM4F/*.c> ",
+            "+<Source/portable/MemMang/heap_1.c> "
+        ]
+    }
+}
