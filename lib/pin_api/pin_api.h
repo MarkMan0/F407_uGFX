@@ -372,5 +372,6 @@ inline void deinit_pin(const pin_name pin) {
 
 /// @brief pin labels on the board
 namespace pins {
-  inline constexpr auto LED0 = PA6, LED1 = PA7, WK_UP = PA0, K0 = PE4, K1 = PE3, LCD_BL_PIN = PB1;
+  inline constexpr auto LED0 = PA6, LED1 = PA7, WK_UP = PA0, K0 = PE4, K1 = PE3, LCD_BL_PIN = PB1, T_CLK = PB13,
+                        T_CS = PB12, T_MOSI = PB15, T_MISO = PB14, T_PEN = PC5;
 }  // namespace pins

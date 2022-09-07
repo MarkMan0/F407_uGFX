@@ -6,7 +6,8 @@
     "build": {
       "flags": [
         "-Isrc/gdisp/mcufont",
-        "-Idriver/gdisp/ILI9341"
+        "-Idriver/gdisp/ILI9341",
+        "-Idriver/ginput/touch/ADS7843"
       ],
       "srcDir": "."
     }

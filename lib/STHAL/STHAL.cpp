@@ -4,6 +4,13 @@
  */
 #include "STHAL.h"
 
+
+
+SPI_HandleTypeDef hspi2;
+SRAM_HandleTypeDef hsram1;
+TIM_HandleTypeDef htim7;
+
+
 /**
  * Initializes the Global MSP.
  */
@@ -81,7 +88,6 @@ void assert_failed(uint8_t* file, uint32_t line) {
 #endif /* USE_FULL_ASSERT */
 
 
-TIM_HandleTypeDef htim7;
 
 /**
  * @brief  This function configures the TIM7 as a time base source.
@@ -186,7 +192,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim) {
 
 static uint32_t FSMC_Initialized = 0;
 
-static void HAL_FSMC_MspInit(void) {
+void HAL_FSMC_MspInit(void) {
   GPIO_InitTypeDef GPIO_InitStruct = { 0 };
   if (FSMC_Initialized) {
     return;
@@ -248,7 +254,7 @@ void HAL_SRAM_MspInit(SRAM_HandleTypeDef* hsram) {
 
 static uint32_t FSMC_DeInitialized = 0;
 
-static void HAL_FSMC_MspDeInit(void) {
+void HAL_FSMC_MspDeInit(void) {
   if (FSMC_DeInitialized) {
     return;
   }
@@ -287,4 +293,84 @@ static void HAL_FSMC_MspDeInit(void) {
 
 void HAL_SRAM_MspDeInit(SRAM_HandleTypeDef* hsram) {
   HAL_FSMC_MspDeInit();
+}
+
+
+
+void MX_GPIO_Init(void) {
+  /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOH_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOE_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
+}
+
+/* FSMC initialization function */
+void MX_FSMC_Init(void) {
+  FSMC_NORSRAM_TimingTypeDef Timing = { 0 };
+
+
+  /** Perform the SRAM1 memory initialization sequence
+   */
+  hsram1.Instance = FSMC_NORSRAM_DEVICE;
+  hsram1.Extended = FSMC_NORSRAM_EXTENDED_DEVICE;
+  /* hsram1.Init */
+  hsram1.Init.NSBank = FSMC_NORSRAM_BANK1;
+  hsram1.Init.DataAddressMux = FSMC_DATA_ADDRESS_MUX_DISABLE;
+  hsram1.Init.MemoryType = FSMC_MEMORY_TYPE_SRAM;
+  hsram1.Init.MemoryDataWidth = FSMC_NORSRAM_MEM_BUS_WIDTH_16;
+  hsram1.Init.BurstAccessMode = FSMC_BURST_ACCESS_MODE_DISABLE;
+  hsram1.Init.WaitSignalPolarity = FSMC_WAIT_SIGNAL_POLARITY_LOW;
+  hsram1.Init.WrapMode = FSMC_WRAP_MODE_DISABLE;
+  hsram1.Init.WaitSignalActive = FSMC_WAIT_TIMING_BEFORE_WS;
+  hsram1.Init.WriteOperation = FSMC_WRITE_OPERATION_ENABLE;
+  hsram1.Init.WaitSignal = FSMC_WAIT_SIGNAL_DISABLE;
+  hsram1.Init.ExtendedMode = FSMC_EXTENDED_MODE_DISABLE;
+  hsram1.Init.AsynchronousWait = FSMC_ASYNCHRONOUS_WAIT_DISABLE;
+  hsram1.Init.WriteBurst = FSMC_WRITE_BURST_DISABLE;
+  hsram1.Init.PageSize = FSMC_PAGE_SIZE_NONE;
+  /* Timing */
+  Timing.AddressSetupTime = 1;
+  Timing.AddressHoldTime = 15;
+  Timing.DataSetupTime = 5;
+  Timing.BusTurnAroundDuration = 0;
+  Timing.CLKDivision = 16;
+  Timing.DataLatency = 17;
+  Timing.AccessMode = FSMC_ACCESS_MODE_A;
+  /* ExtTiming */
+
+  if (HAL_SRAM_Init(&hsram1, &Timing, NULL) != HAL_OK) {
+    Error_Handler();
+  }
+}
+
+
+void MX_SPI2_Init(void) {
+  hspi2.Instance = SPI2;
+  hspi2.Init.Mode = SPI_MODE_MASTER;
+  hspi2.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi2.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
+  hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi2.Init.NSS = SPI_NSS_SOFT;
+  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
+  hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi2.Init.CRCPolynomial = 10;
+  if (HAL_SPI_Init(&hspi2) != HAL_OK) {
+    Error_Handler();
+  }
+}
+
+void HAL_SPI_MspInit(SPI_HandleTypeDef* hspi) {
+  if (hspi->Instance == SPI2) {
+    __HAL_RCC_SPI2_CLK_ENABLE();
+  }
+}
+
+void HAL_SPI_MspDeInit(SPI_HandleTypeDef* hspi) {
+  if (hspi->Instance == SPI2) {
+    __HAL_RCC_SPI2_CLK_DISABLE();
+  }
 }

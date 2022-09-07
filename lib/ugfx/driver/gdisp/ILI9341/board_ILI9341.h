@@ -29,8 +29,12 @@ static GFXINLINE uint16_t LCD_read_data() {
 
 
 extern void LCD_set_backlight(GDisplay* g, gU8 percent);
+extern void LCD_init_board(GDisplay* g);
 
 
+static GFXINLINE void init_board(GDisplay* g) {
+  LCD_init_board(g);
+}
 static GFXINLINE void set_backlight(GDisplay* g, gU8 percent) {
     LCD_set_backlight(g, percent);
 }
@@ -45,11 +49,6 @@ static GFXINLINE gU16 read_data(GDisplay* g){
 }
 
 // Rest is unused
-
-static GFXINLINE void init_board(GDisplay* g) {
-  // FSMC init done in main.cpp
-  return;
-}
 static GFXINLINE void post_init_board(GDisplay* g){
   // not used
   return;
