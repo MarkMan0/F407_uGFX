@@ -3,6 +3,7 @@
 #include "task.h"
 #include "pin_api.h"
 #include "gfx.h"
+#include "usb_device.h"
 
 
 void blink_task(void*) {
@@ -33,7 +34,7 @@ int main(void) {
   HAL_Init();
   SystemClock_Config();
 
-
+  MX_USB_DEVICE_Init();
 
   xTaskCreate(blink_task, "blink", 256, NULL, 10, NULL);
   xTaskCreate(blink_task2, "blink2", 256, NULL, 10, NULL);

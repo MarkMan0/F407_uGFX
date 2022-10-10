@@ -1,0 +1,14 @@
+{
+    "name": "STHAL",
+    "description": "MSP and BSP functions, HAL callbacks, interrupts",
+    "build": {
+        "flags": [
+            "-IUSB_CDC/STM32_USB_Device_Library/CDC/Inc",
+            "-IUSB_CDC/STM32_USB_Device_Library/Core/Inc",
+            "-IUSB_CDC/STM32_USB_Device_Library/Inc",
+            "-IUSB_CDC/USB_DEVICE/App",
+            "-IUSB_CDC/USB_DEVICE/Target"
+        ],
+        "srcDir": "."
+    }
+}
