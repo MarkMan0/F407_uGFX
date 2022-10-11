@@ -6,6 +6,16 @@
 #include "usb_device.h"
 
 
+#include "usb_uart.h"
+
+USB_UART uart;
+
+
+void USB_CDC_Receive_callback(uint8_t* buff, size_t size) {
+  uart.rx_buffer_.push(buff, size);
+}
+
+
 void blink_task(void*) {
   pin_mode(pins::LED0, pin_mode_t::OUT_PP);
   while (1) {
@@ -17,9 +27,10 @@ void blink_task(void*) {
 
 void blink_task2(void*) {
   pin_mode(pins::LED1, pin_mode_t::OUT_PP);
+  uart.init();
   while (1) {
     toggle_pin(pins::LED1);
-    vTaskDelay(pdMS_TO_TICKS(500));
+    uart.send_task();
   }
 }
 
@@ -34,10 +45,9 @@ int main(void) {
   HAL_Init();
   SystemClock_Config();
 
-  MX_USB_DEVICE_Init();
 
   xTaskCreate(blink_task, "blink", 256, NULL, 10, NULL);
-  xTaskCreate(blink_task2, "blink2", 256, NULL, 10, NULL);
+  xTaskCreate(blink_task2, "blink2", 256, NULL, 9, NULL);
   xTaskCreate(gfx_task, "GFX", 256, NULL, 10, NULL);
 
   vTaskStartScheduler();
@@ -96,7 +106,19 @@ extern "C" void uGFXMain() {
   GEventMouse ev;
   ginputGetMouse(0);
   drawScreen();
+
+  constexpr size_t buff_sz = 50;
+  static char buff[buff_sz];
+
+  auto font1 = gdispOpenFont("DejaVuSans24*");
+
   while (1) {
+    if (uart.available()) {
+      memset(buff, buff_sz, 0);
+      uart.receive(buff, buff_sz);
+      gdispDrawString(10, gdispGetHeight() - 30, buff, font1, GFX_BLACK);
+    }
+
     ginputGetMouseStatus(0, &ev);
     if (!(ev.buttons & GINPUT_MOUSE_BTN_LEFT)) continue;
 
