@@ -19,6 +19,10 @@
 #define CMD_Y				0x91
 #define CMD_ENABLE_IRQ		0x80
 
+#define LPF_FACTOR	(0.9)
+
+static gCoord xPrev = 240 / 4, yPrev = 320/4;
+
 static gBool MouseXYZ(GMouse* m, GMouseReading* pdr)
 {
 	(void)m;
@@ -33,10 +37,14 @@ static gBool MouseXYZ(GMouse* m, GMouseReading* pdr)
 		aquire_bus(m);
 		
 		read_value(m, CMD_X);				// Dummy read - disable PenIRQ
-		pdr->x = read_value(m, CMD_X);		// Read X-Value
+		float v = read_value(m, CMD_X);		// Read X-Value
+		pdr->x = LPF_FACTOR*xPrev + (1-LPF_FACTOR)*v;
+		v = pdr->x;
 
 		read_value(m, CMD_Y);				// Dummy read - disable PenIRQ
-		pdr->y = read_value(m, CMD_Y);		// Read Y-Value
+		v = read_value(m, CMD_Y);		// Read Y-Value
+		pdr->y = LPF_FACTOR*yPrev + (1-LPF_FACTOR)*v;
+		v = pdr->y;
 
 		read_value(m, CMD_ENABLE_IRQ);		// Enable IRQ
 

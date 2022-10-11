@@ -72,7 +72,7 @@ int main(void) {
 void drawScreen() {
   gdispClear(GFX_RED);
 
-  char* msg = "uGFX";
+  const char* msg = "uGFX";
   gFont font1, font2;
 
   font1 = gdispOpenFont("DejaVuSans24*");
@@ -114,7 +114,7 @@ extern "C" void uGFXMain() {
 
   while (1) {
     if (uart.available()) {
-      memset(buff, buff_sz, 0);
+      memset(buff, 0, buff_sz);
       uart.receive(buff, buff_sz);
       gdispDrawString(10, gdispGetHeight() - 30, buff, font1, GFX_BLACK);
     }
