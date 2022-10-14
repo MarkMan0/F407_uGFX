@@ -12,6 +12,7 @@ void USB_UART::init() {
 void USB_UART::send(const uint8_t* data, size_t len) {
   if (auto ptr = tx_buffer_.reserve(len)) {
     memcpy(ptr, data, len);
+    tx_buffer_.commit();
   } else {
     for (size_t i = 0; i < len; ++i) {
       tx_buffer_.push(data[i]);
@@ -28,12 +29,12 @@ void USB_UART::putc(char c) {
 }
 
 size_t USB_UART::available() const {
-  return rx_buffer_.get_num_occupied();
+  return rx_buffer_.size();
 }
 
 size_t USB_UART::receive(uint8_t* buff, size_t max_len) {
   // TODO improve by copying continuous space
-  auto occ = rx_buffer_.get_num_occupied();
+  auto occ = rx_buffer_.size();
   size_t i = 0;
   while (occ && i < max_len) {
     buff[i] = rx_buffer_.pop();
@@ -56,7 +57,7 @@ char USB_UART::getc() {
 
 
 void USB_UART::send_task() {
-  while (auto n = tx_buffer_.get_num_occupied_continuous()) {
+  while (auto n = tx_buffer_.size_cont()) {
     if (USBD_OK == CDC_Transmit_FS(const_cast<uint8_t*>(&tx_buffer_.peek()), n)) {
       tx_buffer_.pop(n);
     }

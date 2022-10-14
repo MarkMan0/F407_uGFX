@@ -14,7 +14,7 @@ void ring_buffer_tests();
 
 /**
  * @brief Non-overwriting ring buffer implementation
- *
+ * @details Can be read and written in the same time, but doesn't support multiple writes
  * @tparam T type in buffer
  * @tparam N number of elements in buffer
  */
@@ -26,30 +26,39 @@ private:
 public:
   using data_t = T;
   std::array<T, N> buff_;
-  index_t head_{}, tail_{};
+  index_t read_head_{},  ///< contains valid data, which can be read
+      write_head_{},     ///< non-reserved space, where we can write new data, but won't be read
+      tail_{};           ///< where we read, as expected
   bool is_full_ = false;
+
+  /// @brief readhead to writehead, making data available for reading
+  void commit() {
+    read_head_ = write_head_;
+  }
 
   /// Place and element into the buffer
   uint16_t push(const data_t& d) {
     if (is_full()) {
       return 0;
     }
-    buff_[head_] = d;
-    head_ = (head_ + 1) % N;
-    is_full_ = is_full_ || (head_ == tail_);
-
+    buff_[write_head_] = d;
+    write_head_ = (write_head_ + 1) % N;
+    is_full_ = is_full_ || (write_head_ == tail_);
+    commit();
     return 1;
   }
 
   /// Place @p n elements into the buffer
   /// @return Number of elements written
   uint16_t push(const T* data, uint16_t n) {
+    /// TODO: optimize by copying in larger chunks to continuous space
     int cnt = 0;
     for (; cnt < n && not is_full(); ++cnt) {
-      buff_[head_] = data[cnt];
-      head_ = (head_ + 1) % N;
-      is_full_ = is_full_ || (head_ == tail_);
+      buff_[write_head_] = data[cnt];
+      write_head_ = (write_head_ + 1) % N;
+      is_full_ = is_full_ || (write_head_ == tail_);
     }
+    commit();
     return cnt;
   }
 
@@ -65,9 +74,17 @@ public:
 
   /// Move tail_ pointer by @p n. Essentially deletes the elements
   void pop(size_t n) {
-    assert_param(!is_empty());
+    assert_param(size() >= n);
     tail_ = (tail_ + n) % N;
     is_full_ = false;
+  }
+
+  void pop(T* dest, size_t n) {
+    /// TODO: optimize
+    assert_param(size() >= n);
+    for (size_t i = 0; i < n; ++i) {
+      dest[i] = pop();
+    }
   }
 
   /// First element in the buffer
@@ -80,110 +97,69 @@ public:
     return is_full_;
   }
   [[nodiscard]] bool is_empty() const {
-    return ((not is_full_) && (head_ == tail_));
+    return ((not is_full_) && (read_head_ == tail_));
   }
 
-  [[nodiscard]] uint16_t get_num_occupied() const {
+  [[nodiscard]] uint16_t size() const {
     if (is_full()) {
       return N;
     }
 
-    if (head_ >= tail_) {
-      return (head_ - tail_);
+    if (read_head_ >= tail_) {
+      return (read_head_ - tail_);
     } else {
-      return (N + head_ - tail_);
+      return (N + read_head_ - tail_);
     }
   }
 
   /// size of continuously occupied space after tail_
-  [[nodiscard]] uint16_t get_num_occupied_continuous() const {
-    if (head_ < tail_) {
+  [[nodiscard]] uint16_t size_cont() const {
+    if (read_head_ < tail_) {
       return N - tail_;
     } else {
-      return get_num_occupied();
+      return size();
     }
   }
 
-  [[nodiscard]] uint16_t get_num_free() const {
-    return N - get_num_occupied();
+  [[nodiscard]] uint16_t free() const {
+    if (read_head_ >= write_head_) {
+      return N - size() - (read_head_ - write_head_);
+    } else {
+      return N - size() - (write_head_ - read_head_);
+    }
   }
 
   /// size of continuous free space after head_
-  [[nodiscard]] uint16_t get_num_free_continuous() const {
-    if (head_ < tail_) {
-      return tail_ - head_;
+  [[nodiscard]] uint16_t free_cont() const {
+    if (write_head_ < tail_) {
+      return tail_ - write_head_;
     } else {
-      return N - head_;
+      return N - write_head_;
     }
   }
 
   /// @brief Moves head by @p n, if @p n number of continuous space is available
+  /// <b>Must call commit after</b>
   /// @returns pointer to beginning of the reserved space
   [[nodiscard]] data_t* reserve(uint16_t n) {
-    if (get_num_free_continuous() < n) {
+    if (free_cont() < n) {
       return nullptr;
     }
 
-    data_t* ret = &(buff_[head_]);
-    head_ = (head_ + n) % N;
+    data_t* ret = &(buff_[write_head_]);
+    write_head_ = (write_head_ + n) % N;
 
     return ret;
   }
 
-  [[nodiscard]] uint16_t size() const {
+  [[nodiscard]] uint16_t capacity() const {
     return N;
   }
 
   void reset() {
     is_full_ = false;
-    head_ = 0;
+    read_head_ = 0;
+    write_head_ = 0;
     tail_ = 0;
-  }
-
-
-  /// @name iterating
-  /// @{
-  /// @brief first occupied index in buffer
-  [[nodiscard]] size_t begin() const {
-    return tail_;
-  }
-  /// @brief once past last occupied
-  [[nodiscard]] size_t end() const {
-    return head_;
-  }
-  /// @brief move the index @p idx by one
-  [[nodiscard]] size_t increment_idx(size_t idx) const {
-    ++idx;
-    idx = idx % buff_.size();
-    return idx;
-  }
-  /// @brief decrement index @p idx by one
-  [[nodiscard]] size_t decrement_idx(size_t idx) const {
-    if (idx == 0) {
-      idx = buff_.size() - 1;
-    } else {
-      --idx;
-    }
-    return idx;
-  }
-
-  [[nodiscard]] size_t rbegin() const {
-    return decrement_idx(head_);
-  }
-
-  [[nodiscard]] size_t rend() const {
-    return decrement_idx(tail_);
-  }
-  /// @}
-
-  /// @brief move head position by N
-  /// Used if data was written externally, e.g. by the DMA
-  void advance_head(size_t n) {
-    for (unsigned i = 0; i < n; ++i) {
-      // data is written by DMA, so if full, data is overwritten, which shouldn't happen
-      assert_param(not is_full());
-      ++head_;
-      head_ = head_ % buff_.size();
-    }
   }
 };

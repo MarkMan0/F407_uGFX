@@ -31,7 +31,7 @@ public:
       return rx_buffer_.pop();
     } else {
       constexpr auto n_bytes = sizeof(T);
-      while (rx_buffer_.get_num_occupied() < n_bytes) {
+      while (rx_buffer_.size() < n_bytes) {
         vTaskDelay(5);
       }
       uint8_t buff[n_bytes] = { 0 };
