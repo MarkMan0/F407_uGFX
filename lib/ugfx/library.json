@@ -9,7 +9,10 @@
         "-Idriver/gdisp/ILI9341",
         "-Idriver/ginput/touch/ADS7843"
       ],
-      "srcDir": "."
+      "srcDir": ".",
+      "unflags": [
+          "-Wall"
+      ]
     }
   }
   
