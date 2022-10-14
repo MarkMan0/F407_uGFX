@@ -4,6 +4,7 @@
 #include "pin_api.h"
 #include "gfx.h"
 #include "usb_device.h"
+#include "mixer_api.h"
 
 
 #include "usb_uart.h"
@@ -18,9 +19,19 @@ void USB_CDC_Receive_callback(uint8_t* buff, size_t size) {
 
 void blink_task(void*) {
   pin_mode(pins::LED0, pin_mode_t::OUT_PP);
+  vTaskDelay(1000);
+  MixerAPI api;
+  api.set_uart(&uart);
   while (1) {
     toggle_pin(pins::LED0);
-    vTaskDelay(pdMS_TO_TICKS(500));
+    if (api.load_volumes() == MixerAPI::ret_t::OK) {
+      volatile auto a = api.volumes_[0].value_or(mixer::ProgramVolume());
+      volatile auto b = api.volumes_[1].value_or(mixer::ProgramVolume());
+      volatile auto c = api.volumes_[2].value_or(mixer::ProgramVolume());
+      volatile auto d = api.volumes_[3].value_or(mixer::ProgramVolume());
+      volatile auto e = api.volumes_[4].value_or(mixer::ProgramVolume());
+    }
+    vTaskDelay(pdMS_TO_TICKS(3000));
   }
 }
 
@@ -31,6 +42,7 @@ void blink_task2(void*) {
   while (1) {
     toggle_pin(pins::LED1);
     uart.send_task();
+    vTaskDelay(5);
   }
 }
 
@@ -44,6 +56,8 @@ void gfx_task(void*) {
 int main(void) {
   HAL_Init();
   SystemClock_Config();
+
+  MX_CRC_Init();
 
 
   xTaskCreate(blink_task, "blink", 256, NULL, 10, NULL);
@@ -107,18 +121,7 @@ extern "C" void uGFXMain() {
   ginputGetMouse(0);
   drawScreen();
 
-  constexpr size_t buff_sz = 50;
-  static char buff[buff_sz];
-
-  auto font1 = gdispOpenFont("DejaVuSans24*");
-
   while (1) {
-    if (uart.available()) {
-      memset(buff, 0, buff_sz);
-      uart.receive(buff, buff_sz);
-      gdispDrawString(10, gdispGetHeight() - 30, buff, font1, GFX_BLACK);
-    }
-
     ginputGetMouseStatus(0, &ev);
     if (!(ev.buttons & GINPUT_MOUSE_BTN_LEFT)) continue;
 

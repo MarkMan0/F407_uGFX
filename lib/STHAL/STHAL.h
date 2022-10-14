@@ -10,6 +10,7 @@ extern "C" {
 extern SPI_HandleTypeDef hspi2;
 extern SRAM_HandleTypeDef hsram1;
 extern TIM_HandleTypeDef htim7;
+extern CRC_HandleTypeDef hcrc;
 
 void Error_Handler(void);
 void SystemClock_Config(void);
@@ -38,6 +39,11 @@ void HAL_SRAM_MspDeInit(SRAM_HandleTypeDef* hsram);
 void MX_SPI2_Init(void);
 void HAL_SPI_MspInit(SPI_HandleTypeDef* hspi);
 void HAL_SPI_MspDeInit(SPI_HandleTypeDef* hspi);
+// CRC
+void MX_CRC_Init(void);
+void CRC_begin();
+void CRC_tick(uint32_t);
+uint32_t CRC_end();
 
 #ifdef __cplusplus
 }

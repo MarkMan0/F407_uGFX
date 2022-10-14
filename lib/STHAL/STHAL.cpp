@@ -9,6 +9,7 @@
 SPI_HandleTypeDef hspi2;
 SRAM_HandleTypeDef hsram1;
 TIM_HandleTypeDef htim7;
+CRC_HandleTypeDef hcrc;
 
 
 /**
@@ -373,4 +374,30 @@ void HAL_SPI_MspDeInit(SPI_HandleTypeDef* hspi) {
   if (hspi->Instance == SPI2) {
     __HAL_RCC_SPI2_CLK_DISABLE();
   }
+}
+
+void MX_CRC_Init() {
+  hcrc.Instance = CRC;
+  if (HAL_CRC_Init(&hcrc) != HAL_OK) {
+    Error_Handler();
+  }
+}
+
+void HAL_CRC_MspInit(CRC_HandleTypeDef* hcrc) {
+  __CRC_CLK_ENABLE();
+}
+
+void CRC_begin() {
+  hcrc.State = HAL_CRC_STATE_BUSY;
+  __HAL_CRC_DR_RESET(&hcrc);
+}
+
+void CRC_tick(uint32_t val) {
+  hcrc.Instance->DR = val;
+}
+
+uint32_t CRC_end() {
+  auto tmp = hcrc.Instance->DR;
+  hcrc.State = HAL_CRC_STATE_READY;
+  return tmp;
 }

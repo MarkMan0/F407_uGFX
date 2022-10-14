@@ -1,6 +1,7 @@
 #pragma once
 #include "STHAL.h"
 #include "ring_buffer.h"
+#include "utils.h"
 
 
 extern "C" void USB_CDC_Receive_callback(uint8_t* buff, size_t len);
@@ -18,6 +19,29 @@ public:
 
   size_t receive(uint8_t* buff, size_t max_len);
   size_t receive(char* buff, size_t max_len);
+
+  template <class T>
+  T receive() {
+    // wait at least one byte
+    while (rx_buffer_.is_empty()) {
+      vTaskDelay(5);
+    }
+    // special case for 1 byte
+    if constexpr (sizeof(T) == 1) {
+      return rx_buffer_.pop();
+    } else {
+      constexpr auto n_bytes = sizeof(T);
+      while (rx_buffer_.get_num_occupied() < n_bytes) {
+        vTaskDelay(5);
+      }
+      uint8_t buff[n_bytes] = { 0 };
+      for (unsigned i = 0; i < n_bytes; ++i) {
+        buff[i] = rx_buffer_.pop();
+      }
+
+      return utils::mem2T<T>(buff);
+    }
+  }
 
   char getc();
 

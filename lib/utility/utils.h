@@ -2,6 +2,7 @@
 
 #include "FreeRTOS.h"
 #include "semphr.h"
+#include <cstring>
 
 namespace utils {
 
@@ -86,6 +87,28 @@ namespace utils {
     if (val > 0) return 1;
     if (val < 0) return -1;
     return 0;
+  }
+
+
+  template <class T>
+  inline T mem2T(uint8_t* mem) {
+    T ret;
+    memcpy(&ret, mem, sizeof(T));
+    return ret;
+  }
+
+  inline uint32_t crc32mpeg2(const uint8_t* buf, size_t len, uint32_t crc = 0xffffffff) {
+    for (size_t i = 0; i < len; ++i) {
+      crc ^= buf[i] << 24;
+      for (int j = 0; j < 8; ++j) {
+        if ((crc & 0x80000000) == 0) {
+          crc = crc << 1;
+        } else {
+          crc = (crc << 1) ^ 0x104c11db7;
+        }
+      }
+    }
+    return crc;
   }
 
 }  // namespace utils
