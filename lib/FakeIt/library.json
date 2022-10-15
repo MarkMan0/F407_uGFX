@@ -1,0 +1,10 @@
+{
+    "name": "FakeIt",
+    "version": "2.3.0",
+    "description": "FakeIt headers from Github",
+    "build": {
+        "flags": [
+            "-Iinclude"
+        ]
+    }
+}
