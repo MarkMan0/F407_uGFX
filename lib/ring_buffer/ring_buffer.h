@@ -8,6 +8,10 @@
 #include <cstdint>
 #include <array>
 
+#ifdef TESTING
+void ring_buffer_tests();
+#endif
+
 /**
  * @brief Non-overwriting ring buffer implementation
  *
