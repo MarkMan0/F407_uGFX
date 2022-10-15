@@ -7,6 +7,7 @@
 
 void USB_UART::init() {
   MX_USB_DEVICE_Init();
+  flush_mtx_ = xSemaphoreCreateMutex();
 }
 
 size_t USB_UART::write(const uint8_t* data, size_t len) {
@@ -21,6 +22,7 @@ size_t USB_UART::write(const uint8_t* data, size_t len) {
       tx_buffer_.push(data[i]);
     }
   }
+  notify_tx_task();
   return len;
 }
 
@@ -33,6 +35,7 @@ size_t USB_UART::write(uint8_t c) {
     return 0;
   }
   tx_buffer_.push(c);
+  notify_tx_task();
   return 1;
 }
 
@@ -43,11 +46,11 @@ size_t USB_UART::available() const {
 
 size_t USB_UART::read(uint8_t* buff, size_t max_len) {
   // TODO improve by copying continuous space
-  auto occ = rx_buffer_.size();
+  auto sz = rx_buffer_.size();
   size_t i = 0;
-  while (occ && i < max_len) {
+  while (sz && i < max_len) {
     buff[i] = rx_buffer_.pop();
-    --occ;
+    --sz;
     ++i;
   }
   return i;
@@ -57,12 +60,40 @@ size_t USB_UART::read(char* buff, size_t max_len) {
   return read(reinterpret_cast<uint8_t*>(buff), max_len);
 }
 
+void USB_UART::empty_rx() {
+  rx_buffer_.reset();
+}
 
+void USB_UART::flush() {
+  if (hUsbDeviceFS.dev_state != USBD_STATE_CONFIGURED) {
+    // not connected
+    return;
+  }
+  utils::Lock lck(flush_mtx_);
 
-void USB_UART::send_task() {
+  uint32_t cnt = UART_TimingConfig::WRITE_MAX_RETRY;
   while (auto n = tx_buffer_.size_cont()) {
     if (USBD_OK == CDC_Transmit_FS(const_cast<uint8_t*>(&tx_buffer_.peek()), n)) {
       tx_buffer_.pop(n);
+    } else {
+      if (--cnt == 0) {
+        return;
+      }
+      vTaskDelay(UART_TimingConfig::WRITE_RETRY_TICKS);
     }
   }
+}
+
+void USB_UART::send_task() {
+  xTaskNotifyWait(0, UINT32_MAX, nullptr, portMAX_DELAY);
+  flush();
+}
+
+
+void USB_UART::set_tx_task(xTaskHandle h) {
+  tx_task_ = h;
+}
+
+void USB_UART::notify_tx_task() {
+  xTaskNotify(tx_task_, 0, eNoAction);
 }

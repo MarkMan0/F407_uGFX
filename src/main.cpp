@@ -26,23 +26,19 @@ void blink_task(void*) {
     toggle_pin(pins::LED0);
     if (api.load_volumes() == MixerAPI::ret_t::OK) {
       volatile auto a = api.volumes_[0].value_or(mixer::ProgramVolume());
-      volatile auto b = api.volumes_[1].value_or(mixer::ProgramVolume());
-      volatile auto c = api.volumes_[2].value_or(mixer::ProgramVolume());
-      volatile auto d = api.volumes_[3].value_or(mixer::ProgramVolume());
-      volatile auto e = api.volumes_[4].value_or(mixer::ProgramVolume());
     }
     vTaskDelay(pdMS_TO_TICKS(3000));
   }
 }
 
 
-void blink_task2(void*) {
+void uart_task(void*) {
   pin_mode(pins::LED1, pin_mode_t::OUT_PP);
   uart.init();
+  uart.set_tx_task(xTaskGetCurrentTaskHandle());
   while (1) {
     toggle_pin(pins::LED1);
     uart.send_task();
-    vTaskDelay(5);
   }
 }
 
@@ -61,7 +57,7 @@ int main(void) {
 
 
   xTaskCreate(blink_task, "blink", 256, NULL, 10, NULL);
-  xTaskCreate(blink_task2, "blink2", 256, NULL, 9, NULL);
+  xTaskCreate(uart_task, "uart", 256, NULL, 9, NULL);
   xTaskCreate(gfx_task, "GFX", 256, NULL, 10, NULL);
 
   vTaskStartScheduler();

@@ -10,7 +10,12 @@ namespace mixer {
 
 bool MixerAPI::verify_read(size_t n) {
   // message size is n + sizeof(u32)
+
+  uint32_t cnt = UART_TimingConfig::READ_MAX_RETRY;
   while (uart_->available() < n + 4) {
+    if (--cnt == 0) {
+      return false;
+    }
     vTaskDelay(5);
   }
 
@@ -27,11 +32,10 @@ bool MixerAPI::verify_read(size_t n) {
 }
 
 MixerAPI::ret_t MixerAPI::load_volumes() {
-  while (uart_->available()) {
-    uart_->u8();
-  }
+  uart_->empty_rx();
 
   uart_->write(mixer::commands::LOAD_ALL);
+  uart_->flush();
 
   if (not verify_read(sizeof(uint8_t))) {
     return ret_t::CRC_ERR;
