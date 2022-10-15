@@ -57,7 +57,8 @@ char USB_UART::getc() {
 
 void USB_UART::send_task() {
   while (auto n = tx_buffer_.get_num_occupied_continuous()) {
-    CDC_Transmit_FS(const_cast<uint8_t*>(&tx_buffer_.peek()), n);
-    tx_buffer_.pop(n);
+    if (USBD_OK == CDC_Transmit_FS(const_cast<uint8_t*>(&tx_buffer_.peek()), n)) {
+      tx_buffer_.pop(n);
+    }
   }
 }
