@@ -14,22 +14,32 @@ extern "C" {
 
 static USB_UART uart;
 
+static void dummy_task(void*) {
+  while (1) {
+    xTaskNotifyWait(0, UINT32_MAX, nullptr, portMAX_DELAY);
+  }
+}
+TaskHandle_t handle;
+
+
 void unityOutputStart() {
   uart.init();
+  xTaskCreate(dummy_task, "dummy", 64, nullptr, 1, &handle);
+  uart.set_tx_task(handle);
   HAL_Delay(2000);
 }
 
 void unityOutputChar(char c) {
-  uart.putc(c);
+  uart.write(c);
 }
 
 void unityOutputFlush() {
-  uart.send_task();
+  uart.flush();
   HAL_Delay(10);
 }
 
 void unityOutputComplete() {
-  uart.send_task();
+  uart.flush();
   HAL_Delay(500);
 }
 
