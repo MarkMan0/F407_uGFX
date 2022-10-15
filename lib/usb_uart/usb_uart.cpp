@@ -9,7 +9,10 @@ void USB_UART::init() {
   MX_USB_DEVICE_Init();
 }
 
-void USB_UART::send(const uint8_t* data, size_t len) {
+size_t USB_UART::write(const uint8_t* data, size_t len) {
+  if (tx_buffer_.free() < len) {
+    return 0;
+  }
   if (auto ptr = tx_buffer_.reserve(len)) {
     memcpy(ptr, data, len);
     tx_buffer_.commit();
@@ -18,21 +21,27 @@ void USB_UART::send(const uint8_t* data, size_t len) {
       tx_buffer_.push(data[i]);
     }
   }
+  return len;
 }
 
-void USB_UART::send(const char* str) {
-  return send(reinterpret_cast<const uint8_t*>(str), strlen(str));
+size_t USB_UART::write(const char* str) {
+  return write(reinterpret_cast<const uint8_t*>(str), strlen(str));
 }
 
-void USB_UART::putc(char c) {
-  tx_buffer_.push(static_cast<uint8_t>(c));
+size_t USB_UART::write(uint8_t c) {
+  if (tx_buffer_.is_full()) {
+    return 0;
+  }
+  tx_buffer_.push(c);
+  return 1;
 }
+
 
 size_t USB_UART::available() const {
   return rx_buffer_.size();
 }
 
-size_t USB_UART::receive(uint8_t* buff, size_t max_len) {
+size_t USB_UART::read(uint8_t* buff, size_t max_len) {
   // TODO improve by copying continuous space
   auto occ = rx_buffer_.size();
   size_t i = 0;
@@ -44,16 +53,10 @@ size_t USB_UART::receive(uint8_t* buff, size_t max_len) {
   return i;
 }
 
-size_t USB_UART::receive(char* buff, size_t max_len) {
-  return receive(reinterpret_cast<uint8_t*>(buff), max_len);
+size_t USB_UART::read(char* buff, size_t max_len) {
+  return read(reinterpret_cast<uint8_t*>(buff), max_len);
 }
 
-char USB_UART::getc() {
-  if (rx_buffer_.is_empty()) {
-    return -1;
-  }
-  return static_cast<char>(rx_buffer_.pop());
-}
 
 
 void USB_UART::send_task() {

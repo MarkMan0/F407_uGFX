@@ -37,13 +37,13 @@ public:
   void set_volume(const mixer::ProgramVolume&);
   void load_bmp(int pid, uint8_t* buff, size_t sz);
 
-  void set_uart(USB_UART*);
+  void set_uart(ISerial*);
 
 public:
   bool verify_read(size_t n);
   volume_t load_one();
   volume_t volumes_[MAX_SUPPORTED_PROGRAMS];
-  USB_UART* uart_;
+  ISerial* uart_;
   static inline constexpr size_t BUFF_SZ = 256;
   uint8_t buffer_[BUFF_SZ];
 };

@@ -18,16 +18,20 @@ bool MixerAPI::verify_read(size_t n) {
 
   // read data
   for (i = 0; i < n; ++i) {
-    buffer_[i] = uart_->receive<uint8_t>();
+    buffer_[i] = uart_->u8();
   }
   auto crc = utils::crc32mpeg2(buffer_, n);
-  uint32_t crc_in = uart_->receive<uint32_t>();
+  uint32_t crc_in = uart_->u32();
 
   return crc == crc_in;
 }
 
 MixerAPI::ret_t MixerAPI::load_volumes() {
-  uart_->putc(mixer::commands::LOAD_ALL);
+  while (uart_->available()) {
+    uart_->u8();
+  }
+
+  uart_->write(mixer::commands::LOAD_ALL);
 
   if (not verify_read(sizeof(uint8_t))) {
     return ret_t::CRC_ERR;
@@ -71,6 +75,6 @@ MixerAPI::volume_t MixerAPI::load_one() {
   return vol;
 }
 
-void MixerAPI::set_uart(USB_UART* u) {
+void MixerAPI::set_uart(ISerial* u) {
   uart_ = u;
 }
