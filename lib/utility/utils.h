@@ -4,6 +4,10 @@
 #include "semphr.h"
 #include <cstring>
 
+#ifdef TESTING
+void test_utils();
+#endif
+
 namespace utils {
 
   /// @brief RAII lock for RTOS mutex
@@ -97,7 +101,7 @@ namespace utils {
     return ret;
   }
 
-  inline uint32_t crc32mpeg2(const uint8_t* buf, size_t len, uint32_t crc = 0xffffffff) {
+  inline constexpr uint32_t crc32mpeg2(const uint8_t* buf, size_t len, uint32_t crc = 0xffffffff) {
     for (size_t i = 0; i < len; ++i) {
       crc ^= buf[i] << 24;
       for (int j = 0; j < 8; ++j) {
