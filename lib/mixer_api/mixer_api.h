@@ -4,6 +4,10 @@
 #include "usb_uart.h"
 #include "utils.h"
 
+#ifdef TESTING
+void mixer_api_test();
+#endif
+
 using utils::mem2T;
 
 namespace mixer {

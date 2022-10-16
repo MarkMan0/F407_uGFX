@@ -37,7 +37,7 @@ int main() {
   pre_test();
 
   TaskHandle_t handle;
-  xTaskCreate(test_task_wrap, "test task", 128, nullptr, 10, &handle);
+  xTaskCreate(test_task_wrap, "test task", 512, nullptr, 10, &handle);
 
   vTaskStartScheduler();
 }
