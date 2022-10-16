@@ -5,7 +5,7 @@
 #include "gfx.h"
 #include "usb_device.h"
 #include "mixer_api.h"
-
+#include "mixer_gui.h"
 
 #include "usb_uart.h"
 
@@ -20,13 +20,8 @@ void USB_CDC_Receive_callback(uint8_t* buff, size_t size) {
 void blink_task(void*) {
   pin_mode(pins::LED0, pin_mode_t::OUT_PP);
   vTaskDelay(1000);
-  MixerAPI api;
-  api.set_uart(&uart);
   while (1) {
     toggle_pin(pins::LED0);
-    if (api.load_volumes() == MixerAPI::ret_t::OK) {
-      volatile auto a = api.volumes_[0].value_or(mixer::ProgramVolume());
-    }
     vTaskDelay(pdMS_TO_TICKS(3000));
   }
 }
@@ -47,6 +42,10 @@ void gfx_task(void*) {
   gfxInit();
   while (1) {
   }
+}
+
+extern "C" void uGFXMain() {
+  mixer_gui_task();
 }
 
 int main(void) {
@@ -110,7 +109,7 @@ void drawScreen() {
   gdispCloseFont(font2);
 }
 
-extern "C" void uGFXMain() {
+extern "C" void uGFXMain1() {
   gColor color = GFX_BLACK;
   gU16 pen = 0;
   GEventMouse ev;

@@ -127,3 +127,6 @@ private:
   RingBuffer<uint8_t, 512, true> rx_buffer_;
   RingBuffer<uint8_t, 512> tx_buffer_;
 };
+
+
+extern USB_UART uart;

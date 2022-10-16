@@ -3,6 +3,7 @@
 #include <optional>
 #include "usb_uart.h"
 #include "utils.h"
+#include <array>
 
 #ifdef TESTING
 void mixer_api_test();
@@ -41,12 +42,21 @@ public:
   void set_volume(const mixer::ProgramVolume&);
   void load_bmp(int pid, uint8_t* buff, size_t sz);
 
+  bool changes() {
+    /// TODO: implement
+    return true;
+  }
+
+  const std::array<volume_t, MAX_SUPPORTED_PROGRAMS>& get_volumes() const {
+    return volumes_;
+  }
+
   void set_uart(ISerial*);
 
 public:
   bool verify_read(size_t n);
   volume_t load_one();
-  volume_t volumes_[MAX_SUPPORTED_PROGRAMS];
+  std::array<volume_t, MAX_SUPPORTED_PROGRAMS> volumes_;
   ISerial* uart_;
   static inline constexpr size_t BUFF_SZ = 256;
   uint8_t buffer_[BUFF_SZ];

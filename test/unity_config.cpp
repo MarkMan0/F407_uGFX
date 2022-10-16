@@ -7,12 +7,13 @@
 #include <unity.h>
 #include "usb_uart.h"
 
+USB_UART uart;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 
-static USB_UART uart;
 
 static void dummy_task(void*) {
   while (1) {
