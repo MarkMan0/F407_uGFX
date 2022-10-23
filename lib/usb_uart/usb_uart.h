@@ -2,7 +2,9 @@
 #include "STHAL.h"
 #include "ring_buffer.h"
 #include "utils.h"
-
+#include "FreeRTOS.h"
+#include "task.h"
+#include "semphr.h"
 
 extern "C" void USB_CDC_Receive_callback(uint8_t* buff, size_t len);
 

@@ -2,6 +2,7 @@
 #include "usbd_cdc.h"
 #include "usb_device.h"
 #include "usbd_cdc_if.h"
+#include "sem_lock.h"
 
 
 
