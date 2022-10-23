@@ -1,13 +1,12 @@
 #include "mixer_gui.h"
 #include "mixer_api.h"
-#include "usb_uart.h"
 #include "gfx.h"
 
 static MixerAPI api;
 
 void render_volume(const mixer::ProgramVolume&);
 
-void mixer_gui_task() {
+void mixer_gui_task(ISerial& uart) {
   api.set_uart(&uart);
 
   while (1) {

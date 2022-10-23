@@ -45,7 +45,7 @@ void gfx_task(void*) {
 }
 
 extern "C" void uGFXMain() {
-  mixer_gui_task();
+  mixer_gui_task(uart);
 }
 
 int main(void) {
