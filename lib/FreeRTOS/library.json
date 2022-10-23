@@ -16,7 +16,7 @@
         "srcFilter": [
             "+<Source/*.c> ",
             "+<Source/portable/GCC/ARM_CM4F/*.c> ",
-            "+<Source/portable/MemMang/heap_1.c> "
+            "+<Source/portable/MemMang/heap_4.c> "
         ]
     }
 }
