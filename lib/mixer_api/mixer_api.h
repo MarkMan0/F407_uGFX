@@ -1,7 +1,6 @@
 #pragma once
-#include "STHAL.h"
 #include <optional>
-#include "usb_uart.h"
+#include "ISerial.h"
 #include "utils.h"
 #include <array>
 

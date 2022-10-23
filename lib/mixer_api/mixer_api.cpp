@@ -11,14 +11,9 @@ namespace mixer {
 bool MixerAPI::verify_read(size_t n) {
   // message size is n + sizeof(u32)
 
-  uint32_t cnt = UART_TimingConfig::READ_MAX_RETRY;
-  while (uart_->available() < n + 4) {
-    if (--cnt == 0) {
-      return false;
-    }
-    vTaskDelay(5);
+  if (0 == uart_->wait_for(n + 4)) {
+    return false;
   }
-
   unsigned i = 0;
 
   // read data

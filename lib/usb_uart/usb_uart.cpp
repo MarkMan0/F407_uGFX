@@ -45,6 +45,17 @@ size_t USB_UART::available() const {
   return rx_buffer_.size();
 }
 
+size_t USB_UART::wait_for(size_t n) const {
+  uint32_t cnt = UART_TimingConfig::READ_MAX_RETRY;
+  while (available() < n) {
+    if (--cnt == 0) {
+      return 0;
+    }
+    vTaskDelay(5);
+  }
+  return available();
+}
+
 size_t USB_UART::read(uint8_t* buff, size_t max_len) {
   // TODO improve by copying continuous space
   auto sz = rx_buffer_.size();

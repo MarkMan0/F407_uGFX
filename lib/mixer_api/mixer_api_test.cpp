@@ -1,6 +1,6 @@
 #ifdef TESTING
   #include "mixer_api.h"
-  #include "usb_uart.h"
+  #include "ISerial.h"
   #include "fakeit.hpp"
   #include "unity.h"
 
@@ -23,6 +23,9 @@ namespace MockHelp {
   }
   size_t available() {
     return buf_len - read_idx;
+  }
+  size_t wait_for(size_t n) {
+    return n;
   }
 
   void populate_buff() {
@@ -65,6 +68,7 @@ fakeit::Mock<ISerial> create_mock() {
   When(Method(mock, available)).AlwaysDo(MockHelp::available);
   When(Method(mock, u8)).AlwaysDo(MockHelp::read_u8);
   When(Method(mock, u32)).AlwaysDo(MockHelp::read_u32);
+  When(Method(mock, wait_for)).AlwaysDo(MockHelp::wait_for);
 
 
   Fake(OverloadedMethod(mock, write, size_t(uint8_t)));
