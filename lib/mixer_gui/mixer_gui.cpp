@@ -4,7 +4,9 @@
 
 static MixerAPI api;
 
-void render_volume(const mixer::ProgramVolume&);
+static void render_volume(const mixer::ProgramVolume&, int line);
+static void clear_line(int line);
+
 
 void mixer_gui_task(ISerial& uart) {
   api.set_uart(&uart);
@@ -15,49 +17,49 @@ void mixer_gui_task(ISerial& uart) {
       continue;
     }
 
-    if (MixerAPI::ret_t::OK != api.load_volumes()) {
+    if (MixerAPI::ret_t::OK != api.load_volumes() || (not api.get_volumes()[0])) {
       vTaskDelay(500);
       continue;
     }
-    auto& volumes = api.get_volumes();
 
-    if (not volumes[0]) {
-      continue;
+    int i = 0;
+    for (const auto& vol : api.get_volumes()) {
+      if (vol) {
+        render_volume(*vol, i);
+      } else {
+        clear_line(i);
+      }
+      ++i;
     }
 
-    auto& curr = volumes[0].value();
-
-    render_volume(curr);
     vTaskDelay(1000);
   }
 }
 
-static uint8_t img_buff[5000] = { 0 };
+static uint8_t img_buff[6000] = { 0 };
 
-void render_volume(const mixer::ProgramVolume& vol) {
-  gdispClear(GFX_BLACK);
-  auto font = gdispOpenFont("DejaVuSans24*");
 
-  gdispDrawString(10, 20, vol.name_, font, GFX_WHITE);
+constexpr unsigned base_x = 10;
+constexpr unsigned base_y = 10;
+constexpr unsigned multiplier = 40;
 
-  char buff[50];
+static void clear_line(int line) {
+  gdispFillArea(0, base_y + line * multiplier, gdispGetWidth(), multiplier, GFX_BLACK);
+}
 
-  snprintf(buff, 49, "PID: %d", vol.pid_);
-  gdispDrawString(20, 44, buff, font, GFX_WHITE);
 
-  snprintf(buff, 49, "Volume: %d%%", vol.volume_);
-  gdispDrawString(20, 68, buff, font, GFX_WHITE);
-  gdispCloseFont(font);
-
+static void render_volume(const mixer::ProgramVolume& vol, int line) {
   gdispImage img;
   gdispImageInit(&img);
   img.width = 32;
   img.height = 32;
-  img.bgcolor = GFX_BLACK;
 
-  api.load_image(vol.pid_, img_buff, 5000);
+  if (MixerAPI::ret_t::OK != api.load_image(vol.pid_, img_buff, sizeof(img_buff))) {
+    clear_line(line);
+  }
 
   gdispImageOpenMemory(&img, img_buff);
-  gdispImageDraw(&img, 20, 98, 32, 32, 0, 0);
+  clear_line(line);
+  gdispImageDraw(&img, base_x, base_y + line * multiplier, 32, 32, 0, 0);
   gdispImageClose(&img);
 }

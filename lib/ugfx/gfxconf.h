@@ -137,7 +137,7 @@
     #define GDISP_NEED_IMAGE_PNG                     GFXON
 //        #define GDISP_NEED_IMAGE_PNG_INTERLACED      GFXOFF
         #define GDISP_NEED_IMAGE_PNG_TRANSPARENCY    GFXON
-//        #define GDISP_NEED_IMAGE_PNG_BACKGROUND      GFXON
+        #define GDISP_NEED_IMAGE_PNG_BACKGROUND      GFXOFF
 //        #define GDISP_NEED_IMAGE_PNG_ALPHACLIFF      32
 //        #define GDISP_NEED_IMAGE_PNG_PALETTE_124     GFXON
 //        #define GDISP_NEED_IMAGE_PNG_PALETTE_8       GFXON
