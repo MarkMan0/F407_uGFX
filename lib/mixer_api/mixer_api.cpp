@@ -5,6 +5,7 @@
 namespace mixer {
   enum commands : uint8_t {
     LOAD_ALL = 0x01,
+    READ_IMG = 0x02,
   };
 }
 
@@ -76,4 +77,42 @@ MixerAPI::volume_t MixerAPI::load_one() {
 
 void MixerAPI::set_uart(ISerial* u) {
   uart_ = u;
+}
+
+
+MixerAPI::ret_t MixerAPI::load_image(int pid, uint8_t* buff, size_t max_sz) {
+  uart_->empty_rx();
+  uart_->write(mixer::commands::READ_IMG);
+  uart_->write(reinterpret_cast<uint8_t*>(&pid), sizeof(pid));
+  uart_->flush();
+
+  if (not verify_read(sizeof(uint32_t))) {
+    return ret_t::CRC_ERR;
+  }
+
+  const uint32_t msg_len = utils::mem2T<uint32_t>(buffer_);
+
+  if (max_sz < msg_len) {
+    return ret_t::BUFF_SZ_ERR;
+  }
+
+  constexpr uint32_t chunk_size = BUFF_SZ - sizeof(uint32_t);
+
+  uart_->write(reinterpret_cast<const uint8_t*>(&chunk_size), sizeof(chunk_size));
+  uart_->flush();
+
+
+  for (uint32_t read_bytes = 0; read_bytes < msg_len;) {
+    uint32_t bytes_to_read = std::min(chunk_size, msg_len - read_bytes);
+    if (not verify_read(bytes_to_read)) {
+      return ret_t::CRC_ERR;
+    }
+
+    memcpy(buff + read_bytes, buffer_, bytes_to_read);
+    read_bytes += bytes_to_read;
+    uart_->write(10);
+    uart_->flush();
+  }
+
+  return ret_t::OK;
 }

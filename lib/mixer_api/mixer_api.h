@@ -27,6 +27,7 @@ namespace mixer {
   enum MixerError_t {
     OK = 0,
     CRC_ERR,
+    BUFF_SZ_ERR,
   };
 }  // namespace mixer
 
@@ -39,7 +40,7 @@ public:
 
   ret_t load_volumes();
   void set_volume(const mixer::ProgramVolume&);
-  void load_bmp(int pid, uint8_t* buff, size_t sz);
+  ret_t load_image(int pid, uint8_t* buff, size_t sz);
 
   bool changes() {
     /// TODO: implement

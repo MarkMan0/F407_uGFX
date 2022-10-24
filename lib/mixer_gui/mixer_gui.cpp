@@ -32,6 +32,7 @@ void mixer_gui_task(ISerial& uart) {
   }
 }
 
+static uint8_t img_buff[5000] = { 0 };
 
 void render_volume(const mixer::ProgramVolume& vol) {
   gdispClear(GFX_BLACK);
@@ -47,4 +48,16 @@ void render_volume(const mixer::ProgramVolume& vol) {
   snprintf(buff, 49, "Volume: %d%%", vol.volume_);
   gdispDrawString(20, 68, buff, font, GFX_WHITE);
   gdispCloseFont(font);
+
+  gdispImage img;
+  gdispImageInit(&img);
+  img.width = 32;
+  img.height = 32;
+  img.bgcolor = GFX_BLACK;
+
+  api.load_image(vol.pid_, img_buff, 5000);
+
+  gdispImageOpenMemory(&img, img_buff);
+  gdispImageDraw(&img, 20, 98, 32, 32, 0, 0);
+  gdispImageClose(&img);
 }

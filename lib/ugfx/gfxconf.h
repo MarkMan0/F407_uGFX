@@ -134,9 +134,9 @@
 //        #define GDISP_NEED_IMAGE_BMP_32              GFXON
 //        #define GDISP_IMAGE_BMP_BLIT_BUFFER_SIZE     32
 //    #define GDISP_NEED_IMAGE_JPG                     GFXOFF
-//    #define GDISP_NEED_IMAGE_PNG                     GFXOFF
+    #define GDISP_NEED_IMAGE_PNG                     GFXON
 //        #define GDISP_NEED_IMAGE_PNG_INTERLACED      GFXOFF
-//        #define GDISP_NEED_IMAGE_PNG_TRANSPARENCY    GFXON
+        #define GDISP_NEED_IMAGE_PNG_TRANSPARENCY    GFXON
 //        #define GDISP_NEED_IMAGE_PNG_BACKGROUND      GFXON
 //        #define GDISP_NEED_IMAGE_PNG_ALPHACLIFF      32
 //        #define GDISP_NEED_IMAGE_PNG_PALETTE_124     GFXON
@@ -320,7 +320,7 @@
 //#define GFILE_NEED_NOAUTOMOUNT                       GFXOFF
 //#define GFILE_NEED_NOAUTOSYNC                        GFXOFF
 
-//#define GFILE_NEED_MEMFS                             GFXOFF
+#define GFILE_NEED_MEMFS                             GFXON
 #define GFILE_NEED_ROMFS                             GFXON
 //#define GFILE_NEED_RAMFS                             GFXOFF
 //#define GFILE_NEED_FATFS                             GFXOFF
