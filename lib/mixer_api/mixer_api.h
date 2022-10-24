@@ -14,12 +14,12 @@ namespace mixer {
   struct ProgramVolume {
     static inline constexpr size_t NAME_SZ = 30;
     ProgramVolume() = default;
-    ProgramVolume(int pid, int vol) : pid_(pid), volume_(vol) {
+    ProgramVolume(int16_t pid, int16_t vol) : pid_(pid), volume_(vol) {
     }
-    ProgramVolume(int pid, int vol, const char* name) : pid_(pid), volume_(vol) {
+    ProgramVolume(int16_t pid, int16_t vol, const char* name) : pid_(pid), volume_(vol) {
       strncpy(name_, name, NAME_SZ - 1);
     }
-    uint32_t pid_ = 0;
+    int16_t pid_ = 0;
     char name_[NAME_SZ] = { 0 };
     uint8_t volume_ = 0;
   };
@@ -40,7 +40,7 @@ public:
 
   ret_t load_volumes();
   void set_volume(const mixer::ProgramVolume&);
-  ret_t load_image(int pid, uint8_t* buff, size_t sz);
+  ret_t load_image(int16_t pid, uint8_t* buff, size_t sz);
 
   bool changes() {
     /// TODO: implement

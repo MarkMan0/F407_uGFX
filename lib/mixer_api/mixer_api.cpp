@@ -80,7 +80,7 @@ void MixerAPI::set_uart(ISerial* u) {
 }
 
 
-MixerAPI::ret_t MixerAPI::load_image(int pid, uint8_t* buff, size_t max_sz) {
+MixerAPI::ret_t MixerAPI::load_image(int16_t pid, uint8_t* buff, size_t max_sz) {
   uart_->empty_rx();
   uart_->write(mixer::commands::READ_IMG);
   uart_->write(reinterpret_cast<uint8_t*>(&pid), sizeof(pid));
