@@ -42,10 +42,6 @@ struct SetVolumeHelper {
       return;
     }
 
-    draw_over_image();
-    if (0 != api.load_image(volume_->pid_, img_data_.data(), img_data_.size())) {
-      return;
-    }
     show_btns();
 
     draw_over_text();
@@ -55,6 +51,15 @@ struct SetVolumeHelper {
                        gdispGetWidth() - (base_x + 3 * multiplier) - (base_x + multiplier), multiplier, buff, font,
                        GFX_WHITE, gJustifyCenter);
 
+    if (not session_change_) {
+      // pic is the same, dont draw over it
+      return;
+    }
+    session_change_ = false;
+    draw_over_image();
+    if (0 != api.load_image(volume_->pid_, img_data_.data(), img_data_.size())) {
+      return;
+    }
     gdispImageClose(&img_);
     if (0 != gdispImageOpenMemory(&img_, img_data_.data())) {
       return;
@@ -64,13 +69,18 @@ struct SetVolumeHelper {
   }
 
   void set_volume(const mixer::ProgramVolume& vol) {
+    if (volume_ && volume_->pid_ == vol.pid_) {
+      return;
+    }
     volume_ = vol;
+    session_change_ = true;
   }
 
   void reset() {
     volume_ = std::nullopt;
     hide_btns();
     draw_over_image();
+    draw_over_text();
   }
 
   void handle_event(const GEvent* ev) {
@@ -129,6 +139,7 @@ private:
   img_data_t img_data_;
   const int line_;
   std::optional<mixer::ProgramVolume> volume_;
+  bool session_change_ = true;
 
 
   static constexpr unsigned base_x = 10;
