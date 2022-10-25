@@ -6,6 +6,7 @@
  */
 
 #include "gfx.h"
+#include <string.h>
 
 #if (GFX_USE_GINPUT && GINPUT_NEED_MOUSE) 
 
@@ -53,11 +54,32 @@ static gBool MouseXYZ(GMouse* m, GMouseReading* pdr)
 	return gTrue;
 }
 
+
+static gBool calibration_load(GMouse *m, void *buf, gMemSize sz) {
+
+	(void)m;
+	const GMouseCalibration cal = {
+		.ax = -0.62154454,
+		.bx = -0.0104754698,
+		.cx = 280.954254,
+		.ay = -0.0186230578,
+		.by = 0.898562551,
+		.cy = -78.7429428
+	};
+
+	if (sz != sizeof(cal)) {
+		return gFalse;
+	}
+
+	memcpy(buf, &cal, sz);
+	return gTrue;
+}
+
 const GMouseVMT const GMOUSE_DRIVER_VMT[1] = {{
 	{
 		GDRIVER_TYPE_TOUCH,
 		GMOUSE_VFLG_TOUCH | GMOUSE_VFLG_CALIBRATE | GMOUSE_VFLG_CAL_TEST |
-			GMOUSE_VFLG_ONLY_DOWN | GMOUSE_VFLG_POORUPDOWN,
+			GMOUSE_VFLG_ONLY_DOWN | GMOUSE_VFLG_POORUPDOWN | GMOUSE_VFLG_DEFAULTFINGER,
 		sizeof(GMouse)+GMOUSE_ADS7843_BOARD_DATA_SIZE,
 		_gmouseInitDriver,
 		_gmousePostInitDriver,
@@ -81,7 +103,7 @@ const GMouseVMT const GMOUSE_DRIVER_VMT[1] = {{
 	0,				// deinit
 	MouseXYZ,		// get
 	0,				// calsave
-	0				// calload
+	calibration_load				// calload
 }};
 
 #endif /* GFX_USE_GINPUT && GINPUT_NEED_MOUSE */
