@@ -46,10 +46,8 @@ namespace utils {
 
 
   template <class T>
-  inline T mem2T(uint8_t* mem) {
-    T ret;
-    memcpy(&ret, mem, sizeof(T));
-    return ret;
+  inline T mem2T(const uint8_t* mem) {
+    return *reinterpret_cast<const T*>(mem);
   }
 
   inline constexpr uint32_t crc32mpeg2(const uint8_t* buf, size_t len, uint32_t crc = 0xffffffff) {

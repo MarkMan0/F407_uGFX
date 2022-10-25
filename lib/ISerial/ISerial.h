@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 
+/// @brief Interface for serial communication in API or mock
 class ISerial {
 public:
   virtual size_t available() const = 0;

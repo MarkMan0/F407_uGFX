@@ -7,21 +7,25 @@
 #include "semphr.h"
 #include "ISerial.h"
 
+/// @brief Called by STM32 HAL
 extern "C" void USB_CDC_Receive_callback(uint8_t* buff, size_t len);
 
-
+/// @brief Define basic timeouts for UART
 namespace UART_TimingConfig {
   static constexpr uint32_t WRITE_RETRY_TICKS = pdMS_TO_TICKS(5), READ_RETRY_TICKS = pdMS_TO_TICKS(5),
                             READ_MAX_RETRY = 100, WRITE_MAX_RETRY = 100;
 };
 
+/// @brief Implementation of Serial interface over USB CDC
 class USB_UART : public ISerial {
 public:
+  /// @brief get reference to singleton
   static USB_UART& get_instance() {
     static USB_UART self;
     return self;
   }
 
+  /// @brief Initialize the USB CDC interface
   void init();
 
   size_t available() const override;
@@ -35,14 +39,14 @@ public:
 
   void flush() override;
 
-  size_t printf(const char* fmt, ...);
-
-
   size_t read(uint8_t* buff, size_t max_len) override;
   size_t read(char* buff, size_t max_len) override;
 
   void empty_rx() override;
 
+  /// @brief Read arbitrary data from the UART
+  /// @tparam T type of data to read
+  /// @todo This seems really inefficient
   template <class T>
   T read() {
     // wait at least one byte
@@ -99,8 +103,10 @@ public:
     return read<float>();
   }
 
+  /// @brief Set transmit task, which will be notified when write() is called
   void set_tx_task(xTaskHandle);
 
+  /// @brief Called from transmit task to empty tx buffer
   void send_task();
 
   friend void ::USB_CDC_Receive_callback(uint8_t* buff, size_t len);
@@ -111,7 +117,7 @@ private:
   USB_UART& operator=(const USB_UART&) = delete;
   void notify_tx_task();
   xTaskHandle tx_task_{};
-  xSemaphoreHandle flush_mtx_{};
+  xSemaphoreHandle flush_mtx_{};  ///< flush can be called by user and task, need to lock it
   RingBuffer<uint8_t, 512, true> rx_buffer_;
   RingBuffer<uint8_t, 512> tx_buffer_;
 };

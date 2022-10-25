@@ -10,11 +10,16 @@ static constexpr uint32_t MAX_LINES = 5;
 static CommAPI& api = CommAPI::get_instance();
 
 static gFont font;
+
+/// @brief Used to render one "line" on the GUI
 struct SetVolumeHelper {
   using img_data_t = std::array<uint8_t, 5500>;
+  /// @brief Line is set at creation, and not changed after
+  /// @param line line of this instance
   SetVolumeHelper(int line) : line_(line) {
   }
 
+  /// @brief Create the widgets, hidden
   void init() {
     GWidgetInit wi;
     gwinWidgetClearInit(&wi);
@@ -47,6 +52,8 @@ struct SetVolumeHelper {
     btn_plus_ = gwinButtonCreate(0, &wi);
   }
 
+  /// @brief Render the line, if it's set
+  /// @details Only redraw parts, which have changed since last call
   void render() {
     if (not volume_) {
       return;
@@ -78,6 +85,7 @@ struct SetVolumeHelper {
     }
   }
 
+  /// @brief Set the session of this line
   void set_volume(const mixer::ProgramVolume& vol) {
     if (volume_ && volume_->pid_ == vol.pid_) {
       // picture haven't changed
@@ -90,11 +98,13 @@ struct SetVolumeHelper {
     volume_ = vol;
   }
 
+  /// @brief Hide this line and remove session info
   void reset() {
     volume_ = std::nullopt;
     hide_widgets();
   }
 
+  /// @brief Check if event belongs to this line and act accordingly
   void handle_event(const GEvent* ev) {
     if (not volume_) {
       return;
@@ -174,16 +184,17 @@ private:
   GHandle btn_minus_;
   GHandle btn_mute_;
   GHandle slider_;
-  static img_data_t img_data_;
   const int line_;
   std::optional<mixer::ProgramVolume> volume_;
-  bool session_change_ = true;
-  bool volume_changed_ = false;
-  std::array<char, 30> slider_txt_ = { 0 };
+  bool session_change_ = true;               ///< If true, picture will be redrawn
+  bool volume_changed_ = true;               ///< If true, slider is redrawn
+  std::array<char, 30> slider_txt_ = { 0 };  ///< holds the text on the slider
 
-  static constexpr unsigned base_x = 10;
-  static constexpr unsigned base_y = 10;
-  static constexpr unsigned multiplier = 40;
+  static constexpr unsigned base_x = 10;      ///< X of first widget
+  static constexpr unsigned base_y = 10;      ///< Y of first widget
+  static constexpr unsigned multiplier = 40;  ///< spacing of widgets
+
+  static img_data_t img_data_;  ///< Only one storage is enough, since we dont redraw frequently
 };
 
 SetVolumeHelper::img_data_t SetVolumeHelper::img_data_;
@@ -203,28 +214,33 @@ void mixer_gui_task() {
   geventListenerInit(&gl);
   gwinAttachListener(&gl);
 
+  // create the widgets
   for (auto& helper : gui_objs) {
     helper.init();
   }
 
   while (1) {
+    // wait for user input
     GEvent* pe = geventEventWait(&gl, 1000);
 
     if (pe) {
+      // if input, handle it in widgets
       for (auto& obj : gui_objs) {
         obj.handle_event(pe);
       }
     }
 
-    if (not api.changes()) {
+    // check if we have a reason to redraw
+    if (not pe && not api.changes()) {
       continue;
     }
 
+    // something is new, load the volumes
     if (CommAPI::ret_t::OK != api.load_volumes() || (not api.get_volumes()[0])) {
       continue;
     }
 
-
+    // draw the volumes one by one
     unsigned line = 0;
     for (const auto& vol : api.get_volumes()) {
       if (vol) {
@@ -234,7 +250,7 @@ void mixer_gui_task() {
         curr.render();
       }
     }
-    // clear the rest of them
+    // clear the rest of the lines
     for (; line < gui_objs.size(); ++line) {
       gui_objs[line].reset();
     }

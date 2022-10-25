@@ -97,7 +97,7 @@ auto mock = create_mock();
 void test_sequence() {
   MockHelp::populate_buff();
   CommAPI& api = CommAPI::get_instance();
-  api.set_uart(&(mock.get()));
+  api.init(&(mock.get()));
 
 
   api.load_volumes();

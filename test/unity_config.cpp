@@ -7,7 +7,7 @@
 #include <unity.h>
 #include "usb_uart.h"
 
-USB_UART uart;
+USB_UART& uart = USB_UART::get_instance();
 
 #ifdef __cplusplus
 extern "C" {

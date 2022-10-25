@@ -46,6 +46,10 @@ int main() {
 void vApplicationStackOverflowHook(TaskHandle_t xTask, char* pcTaskName) {
   assert_param(0);
 }
+extern "C" void vApplicationMallocFailedHook(void) {
+  while (1) {
+  }
+}
 
 __weak void setUp() {
 }

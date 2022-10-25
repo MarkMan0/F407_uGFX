@@ -13,8 +13,10 @@ void mixer_api_test();
 using utils::mem2T;
 
 namespace mixer {
+
+  /// @brief Basic info about an audio session
   struct ProgramVolume {
-    static inline constexpr size_t NAME_SZ = 30;
+    static inline constexpr size_t NAME_SZ = 30;  ///< Max name length
     ProgramVolume() = default;
     ProgramVolume(int16_t pid, int16_t vol) : pid_(pid), volume_(vol) {
     }
@@ -37,28 +39,53 @@ namespace mixer {
 
 class CommAPI {
 public:
-  static inline constexpr size_t MAX_SUPPORTED_PROGRAMS = 5;
+  static inline constexpr size_t MAX_SUPPORTED_PROGRAMS = 5;  ///< can only render 5 lines
   using volume_t = std::optional<mixer::ProgramVolume>;
   using ret_t = mixer::MixerError_t;
 
+  /// @brief load sessions into internal buffer
+  /// @return 0 on success
   ret_t load_volumes();
+
+  /// @brief set volume for session
+  /// @param pid PID of the session
+  /// @param vol volume 0-100%
   void set_volume(int16_t pid, uint8_t vol);
+
+  /// @brief Load image for session
+  /// @param pid PID of session
+  /// @param buff destination
+  /// @param sz size of @p buff
+  /// @return 0 on success
   ret_t load_image(int16_t pid, uint8_t* buff, size_t sz);
+
+  /// @brief Mute/unmute session
+  /// @param pid PID of session
+  /// @param mute mute request
   void set_mute(int16_t pid, bool mute);
 
-  void echo(const char*);
+  /// @brief Print to remote console
+  /// @param str null terminated array
+  void echo(const char* str);
 
+  /// @brief check if sessions have changed since last check
+  /// @return true if sessions have changed
   bool changes() {
     /// TODO: implement
     return true;
   }
 
+  /// @brief return reference to internal buffer of sessions
   const std::array<volume_t, MAX_SUPPORTED_PROGRAMS>& get_volumes() const {
     return volumes_;
   }
 
-  void init(ISerial*);
+  /// @brief Initialize the singleton, set uart, create mutex
+  /// @param uart the UART for communication with PC
+  void init(ISerial* uart);
 
+  /// @brief retrieve reference to singleton
+  /// @return refernece
   static CommAPI& get_instance() {
     static CommAPI api;
     return api;
@@ -68,11 +95,19 @@ private:
   CommAPI() = default;
   CommAPI(const CommAPI&) = delete;
   CommAPI& operator=(const CommAPI&) = delete;
+
+  /// @brief reads n+4 bytes and checks CRC at the end of buffer
+  /// @details uses timeout from UART. Reads into internal buffer
+  /// @param n number of bytes to read, without CRC
+  /// @return true, if read @p n bytes and CRC is correct
   bool verify_read(size_t n);
+
+  /// @brief Load a session from the UART
+  /// @return session info or std::nullopt
   volume_t load_one();
   std::array<volume_t, MAX_SUPPORTED_PROGRAMS> volumes_;
   ISerial* uart_;
   static inline constexpr size_t BUFF_SZ = 256;
-  uint8_t buffer_[BUFF_SZ];
+  uint8_t buffer_[BUFF_SZ];  ///< used for CRC and serial communication
   SemaphoreHandle_t mtx_;
 };

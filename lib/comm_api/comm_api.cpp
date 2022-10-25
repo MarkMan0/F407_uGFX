@@ -16,8 +16,6 @@ namespace mixer {
 }
 
 bool CommAPI::verify_read(size_t n) {
-  // message size is n + sizeof(u32)
-
   if (0 == uart_->wait_for(n + 4)) {
     return false;
   }
@@ -93,7 +91,13 @@ void CommAPI::init(ISerial* u) {
   mtx_ = xSemaphoreCreateMutex();
 }
 
-
+/// @details Loading is done in multiple steps.
+///   First, we send the PID with it's CRC.
+///   Next, we read the length of the image in bytes from the PC
+///   After, we send the max chunk size our buffer can hold ( size of buffer minus 4(CRC))
+///   Next, we read the chunks and verify the CRC for each one. If OK, we send a byte, indicating we are ready for next
+///     chunk
+///   After all chunks are correctly received, we are done
 CommAPI::ret_t CommAPI::load_image(int16_t pid, uint8_t* buff, size_t max_sz) {
   utils::Lock lck(mtx_);
   uart_->empty_rx();
