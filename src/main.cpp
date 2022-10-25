@@ -15,16 +15,31 @@ void USB_CDC_Receive_callback(uint8_t* buff, size_t size) {
   USB_UART::get_instance().rx_buffer_.push(buff, size);
 }
 
+void monitor_task(void*) {
+  vTaskDelay(pdMS_TO_TICKS(30000));
 
-void blink_task(void*) {
-  pin_mode(pins::LED0, pin_mode_t::OUT_PP);
-  vTaskDelay(1000);
+  const auto num_of_tasks = uxTaskGetNumberOfTasks();
+  auto statuses = static_cast<TaskStatus_t*>(pvPortMalloc(num_of_tasks * sizeof(TaskStatus_t)));
+  constexpr size_t memory_low_th{ 999999 };
+  static char buff[100];
   while (1) {
-    toggle_pin(pins::LED0);
-    vTaskDelay(pdMS_TO_TICKS(3000));
+    if (auto n = uxTaskGetSystemState(statuses, num_of_tasks, NULL)) {
+      for (unsigned int i = 0; i < n; ++i) {
+        if (statuses[i].usStackHighWaterMark < memory_low_th) {
+          sprintf(buff, "MEM:%s:%d\n", statuses[i].pcTaskName, statuses[i].usStackHighWaterMark);
+          CommAPI::get_instance().echo(buff);
+        }
+      }
+    }
+
+    if (xPortGetFreeHeapSize() < memory_low_th) {
+      sprintf(buff, "HEAP:%u\t%u\n", static_cast<unsigned>(xPortGetFreeHeapSize()),
+              static_cast<unsigned>(xPortGetMinimumEverFreeHeapSize()));
+      CommAPI::get_instance().echo(buff);
+    }
+    vTaskDelay(pdMS_TO_TICKS(5000));
   }
 }
-
 
 void uart_task(void*) {
   pin_mode(pins::LED1, pin_mode_t::OUT_PP);
@@ -55,8 +70,9 @@ int main(void) {
 
   MX_CRC_Init();
 
-
-  xTaskCreate(blink_task, "blink", 256, NULL, 10, NULL);
+#ifdef DEBUG
+  xTaskCreate(monitor_task, "monitor", 256, NULL, 8, NULL);
+#endif
   xTaskCreate(uart_task, "uart", 256, NULL, 9, NULL);
   xTaskCreate(gfx_task, "GFX", 256, NULL, 10, NULL);
 
