@@ -1,11 +1,13 @@
 #include "mixer_api.h"
 #include <cstring>
 #include "utils.h"
+#include <type_traits>
 
 namespace mixer {
   enum commands : uint8_t {
     LOAD_ALL = 0x01,
     READ_IMG = 0x02,
+    RESPONSE_OK = 0xA0,
   };
 }
 
@@ -83,7 +85,13 @@ void MixerAPI::set_uart(ISerial* u) {
 MixerAPI::ret_t MixerAPI::load_image(int16_t pid, uint8_t* buff, size_t max_sz) {
   uart_->empty_rx();
   uart_->write(mixer::commands::READ_IMG);
-  uart_->write(reinterpret_cast<uint8_t*>(&pid), sizeof(pid));
+
+  uint8_t msg_buff[8] = { 0 };
+  static_assert(std::is_same<decltype(pid), int16_t>::value);
+
+  *reinterpret_cast<int16_t*>(msg_buff) = pid;
+  *reinterpret_cast<uint32_t*>(msg_buff + 2) = utils::crc32mpeg2(msg_buff, 2);
+  uart_->write(msg_buff, 6);
   uart_->flush();
 
   if (not verify_read(sizeof(uint32_t))) {
@@ -97,8 +105,10 @@ MixerAPI::ret_t MixerAPI::load_image(int16_t pid, uint8_t* buff, size_t max_sz) 
   }
 
   constexpr uint32_t chunk_size = BUFF_SZ - sizeof(uint32_t);
+  *reinterpret_cast<uint32_t*>(msg_buff) = chunk_size;
+  *reinterpret_cast<uint32_t*>(msg_buff + 4) = utils::crc32mpeg2(msg_buff, 4);
 
-  uart_->write(reinterpret_cast<const uint8_t*>(&chunk_size), sizeof(chunk_size));
+  uart_->write(msg_buff, 8);
   uart_->flush();
 
 
@@ -110,7 +120,7 @@ MixerAPI::ret_t MixerAPI::load_image(int16_t pid, uint8_t* buff, size_t max_sz) 
 
     memcpy(buff + read_bytes, buffer_, bytes_to_read);
     read_bytes += bytes_to_read;
-    uart_->write(10);
+    uart_->write(mixer::commands::RESPONSE_OK);
     uart_->flush();
   }
 
