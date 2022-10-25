@@ -7,6 +7,7 @@ namespace mixer {
   enum commands : uint8_t {
     LOAD_ALL = 0x01,
     READ_IMG = 0x02,
+    SET_VOLUME = 0x03,
     RESPONSE_OK = 0xA0,
   };
 }
@@ -125,4 +126,23 @@ MixerAPI::ret_t MixerAPI::load_image(int16_t pid, uint8_t* buff, size_t max_sz) 
   }
 
   return ret_t::OK;
+}
+
+void MixerAPI::set_volume(const mixer::ProgramVolume& vol) {
+  uart_->empty_rx();
+  uart_->write(mixer::commands::SET_VOLUME);
+
+  static_assert(std::is_same<int16_t, decltype(vol.pid_)>::value);
+  static_assert(std::is_same<uint8_t, decltype(vol.volume_)>::value);
+
+  constexpr size_t buff_sz = sizeof(vol.pid_) + sizeof(vol.volume_) + sizeof(uint32_t);
+
+  uint8_t msg_buff[buff_sz] = { 0 };
+  *reinterpret_cast<int16_t*>(msg_buff) = vol.pid_;
+  *reinterpret_cast<uint8_t*>(msg_buff + 2) = vol.volume_;
+  *reinterpret_cast<uint32_t*>(msg_buff + 3) = utils::crc32mpeg2(msg_buff, 3);
+
+
+  uart_->write(msg_buff, buff_sz);
+  uart_->flush();
 }
