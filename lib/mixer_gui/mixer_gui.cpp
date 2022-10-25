@@ -106,29 +106,14 @@ struct SetVolumeHelper {
     if (not volume_) {
       return;
     }
-    const auto handle = ((GEventGWinButton*)ev)->gwin;
 
-
-    if (handle == btn_mute_) {
-      api.set_mute(volume_->pid_, not volume_->muted_);
-      return;
+    if (ev->type == GEVENT_GWIN_BUTTON) {
+      const auto handle = ((GEventGWinButton*)ev)->gwin;
+      handle_button_event(handle);
     }
 
-    bool need_change = false;
-
-    int16_t vol = volume_->volume_;  // so no underflow when minus
-    // finer control for master volume
-    const int16_t increment = volume_->pid_ == -1 ? 2 : 10;
-    if (handle == btn_minus_) {
-      need_change = true;
-      vol -= increment;
-    } else if (handle == btn_plus_) {
-      need_change = true;
-      vol += increment;
-    }
-
-    if (need_change) {
-      api.set_volume(volume_->pid_, utils::constrain(vol, 0, 100));
+    if (ev->type == GEVENT_GWIN_SLIDER) {
+      handle_slider_event((GEventGWinSlider*)ev);
     }
   }
 
@@ -150,6 +135,47 @@ private:
     gwinShow(btn_minus_);
     gwinShow(btn_plus_);
     gwinShow(slider_);
+  }
+
+  void handle_button_event(const GHandle h) {
+    handle_mute_btn(h);
+    handle_plus_minus_btn(h);
+  }
+
+  void handle_plus_minus_btn(const GHandle h) {
+    if (h != btn_minus_ && h != btn_plus_) {
+      return;
+    }
+
+    bool need_change = false;
+
+    int16_t vol = volume_->volume_;  // so no underflow when minus
+    // finer control for master volume
+    const int16_t increment = volume_->pid_ == -1 ? 2 : 10;
+    if (h == btn_minus_) {
+      need_change = true;
+      vol -= increment;
+    } else if (h == btn_plus_) {
+      need_change = true;
+      vol += increment;
+    }
+
+    if (need_change) {
+      api.set_volume(volume_->pid_, utils::constrain(vol, 0, 100));
+    }
+  }
+
+  void handle_mute_btn(const GHandle h) {
+    if (h != btn_mute_) {
+      return;
+    }
+    api.set_mute(volume_->pid_, not volume_->muted_);
+  }
+
+  void handle_slider_event(const GEventGWinSlider* ev) {
+    if (ev->gwin == slider_ && ev->action == GSLIDER_EVENT_SET) {
+      api.set_volume(volume_->pid_, utils::constrain(ev->position, 0, 100));
+    }
   }
 
   GHandle btn_plus_;
@@ -191,7 +217,7 @@ void mixer_gui_task() {
   while (1) {
     GEvent* pe = geventEventWait(&gl, 1000);
 
-    if (pe && pe->type == GEVENT_GWIN_BUTTON) {
+    if (pe) {
       for (auto& obj : gui_objs) {
         obj.handle_event(pe);
       }

@@ -218,8 +218,8 @@
     #define GWIN_NEED_BUTTON                         GFXON
 //        #define GWIN_BUTTON_LAZY_RELEASE             GFXOFF
     #define GWIN_NEED_SLIDER                         GFXON
-//        #define GWIN_SLIDER_NOSNAP                   GFXOFF
-//        #define GWIN_SLIDER_DEAD_BAND                5
+        #define GWIN_SLIDER_NOSNAP                   GFXON
+        #define GWIN_SLIDER_DEAD_BAND                1
 //        #define GWIN_SLIDER_TOGGLE_INC               20
 //    #define GWIN_NEED_CHECKBOX                       GFXOFF
 //    #define GWIN_NEED_IMAGE                          GFXOFF
