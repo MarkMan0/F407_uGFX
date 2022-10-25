@@ -42,12 +42,16 @@ struct SetVolumeHelper {
     if (not volume_) {
       return;
     }
-
+    auto curr = *volume_;  // needed for debug, pio doesnt work with optional :/
     show_btns();
 
     draw_over_text();
     char buff[15];
-    snprintf(buff, 14, "%d%%", volume_->volume_);
+    if (curr.muted_) {
+      strncpy(buff, "Muted", 15);
+    } else {
+      snprintf(buff, 14, "%d%%", curr.volume_);
+    }
     gdispDrawStringBox(base_x + 3 * multiplier, base_y + line_ * multiplier,
                        gdispGetWidth() - (base_x + 3 * multiplier) - (base_x + multiplier), multiplier, buff, font,
                        GFX_WHITE, gJustifyCenter);
@@ -57,7 +61,7 @@ struct SetVolumeHelper {
       return;
     }
     draw_over_image();
-    if (0 != api.load_image(volume_->pid_, img_data_.data(), img_data_.size())) {
+    if (0 != api.load_image(curr.pid_, img_data_.data(), img_data_.size())) {
       return;
     }
     gdispImageClose(&img_);
@@ -75,10 +79,12 @@ struct SetVolumeHelper {
 
   void set_volume(const mixer::ProgramVolume& vol) {
     if (volume_ && volume_->pid_ == vol.pid_) {
-      return;
+      // picture haven't changed
+      // session_change_ = false;
+    } else {
+      session_change_ = true;
     }
     volume_ = vol;
-    session_change_ = true;
   }
 
   void reset() {

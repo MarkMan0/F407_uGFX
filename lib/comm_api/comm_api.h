@@ -22,6 +22,7 @@ namespace mixer {
     int16_t pid_ = 0;
     char name_[NAME_SZ] = { 0 };
     uint8_t volume_ = 0;
+    bool muted_ = false;
   };
 
   enum MixerError_t {

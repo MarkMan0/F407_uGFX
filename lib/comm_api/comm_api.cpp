@@ -60,13 +60,18 @@ CommAPI::ret_t CommAPI::load_volumes() {
 CommAPI::volume_t CommAPI::load_one() {
   mixer::ProgramVolume vol;
   // first part: PID, volume, name_len
-  if (not verify_read(sizeof(vol.pid_) + sizeof(vol.volume_) + sizeof(uint8_t))) {
+  if (not verify_read(sizeof(vol.pid_) + sizeof(vol.volume_) + sizeof(uint8_t) + sizeof(uint8_t))) {
     return std::nullopt;
   }
-  vol.pid_ = mem2T<decltype(vol.pid_)>(buffer_);
-  vol.volume_ = mem2T<decltype(vol.volume_)>(buffer_ + sizeof(vol.pid_));
+  size_t offset = 0;
+  vol.pid_ = mem2T<decltype(vol.pid_ + offset)>(buffer_);
+  offset += sizeof(vol.pid_);
+  vol.volume_ = mem2T<decltype(vol.volume_)>(buffer_ + offset);
+  offset += sizeof(vol.volume_);
+  vol.muted_ = mem2T<uint8_t>(buffer_ + offset);
+  offset += sizeof(uint8_t);
 
-  uint8_t name_len = mem2T<uint8_t>(buffer_ + sizeof(vol.pid_) + sizeof(vol.volume_));
+  uint8_t name_len = mem2T<uint8_t>(buffer_ + offset);
 
   if (not verify_read(name_len * sizeof(char))) {
     return std::nullopt;
