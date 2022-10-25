@@ -42,6 +42,8 @@ public:
   void set_volume(const mixer::ProgramVolume&);
   ret_t load_image(int16_t pid, uint8_t* buff, size_t sz);
 
+  void echo(const char*);
+
   bool changes() {
     /// TODO: implement
     return true;

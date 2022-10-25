@@ -8,6 +8,7 @@ namespace mixer {
     LOAD_ALL = 0x01,
     READ_IMG = 0x02,
     SET_VOLUME = 0x03,
+    ECHO = 0x04,
     RESPONSE_OK = 0xA0,
   };
 }
@@ -145,4 +146,9 @@ void CommAPI::set_volume(const mixer::ProgramVolume& vol) {
 
   uart_->write(msg_buff, buff_sz);
   uart_->flush();
+}
+
+void CommAPI::echo(const char* c) {
+  uart_->write(mixer::commands::ECHO);
+  uart_->write(c);
 }
