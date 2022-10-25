@@ -48,6 +48,7 @@ struct SetVolumeHelper {
     slider_ = gwinSliderCreate(0, &wi);
 
     wi.text = "+";
+    wi.g.width = 32;
     wi.g.x = gdispGetWidth() - base_x - 32;
     btn_plus_ = gwinButtonCreate(0, &wi);
   }
