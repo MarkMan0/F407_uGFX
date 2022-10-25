@@ -12,7 +12,7 @@ namespace mixer {
   };
 }
 
-bool MixerAPI::verify_read(size_t n) {
+bool CommAPI::verify_read(size_t n) {
   // message size is n + sizeof(u32)
 
   if (0 == uart_->wait_for(n + 4)) {
@@ -30,7 +30,7 @@ bool MixerAPI::verify_read(size_t n) {
   return crc == crc_in;
 }
 
-MixerAPI::ret_t MixerAPI::load_volumes() {
+CommAPI::ret_t CommAPI::load_volumes() {
   uart_->empty_rx();
 
   uart_->write(mixer::commands::LOAD_ALL);
@@ -56,7 +56,7 @@ MixerAPI::ret_t MixerAPI::load_volumes() {
 }
 
 
-MixerAPI::volume_t MixerAPI::load_one() {
+CommAPI::volume_t CommAPI::load_one() {
   mixer::ProgramVolume vol;
   // first part: PID, volume, name_len
   if (not verify_read(sizeof(vol.pid_) + sizeof(vol.volume_) + sizeof(uint8_t))) {
@@ -78,12 +78,12 @@ MixerAPI::volume_t MixerAPI::load_one() {
   return vol;
 }
 
-void MixerAPI::set_uart(ISerial* u) {
+void CommAPI::set_uart(ISerial* u) {
   uart_ = u;
 }
 
 
-MixerAPI::ret_t MixerAPI::load_image(int16_t pid, uint8_t* buff, size_t max_sz) {
+CommAPI::ret_t CommAPI::load_image(int16_t pid, uint8_t* buff, size_t max_sz) {
   uart_->empty_rx();
   uart_->write(mixer::commands::READ_IMG);
 
@@ -128,7 +128,7 @@ MixerAPI::ret_t MixerAPI::load_image(int16_t pid, uint8_t* buff, size_t max_sz) 
   return ret_t::OK;
 }
 
-void MixerAPI::set_volume(const mixer::ProgramVolume& vol) {
+void CommAPI::set_volume(const mixer::ProgramVolume& vol) {
   uart_->empty_rx();
   uart_->write(mixer::commands::SET_VOLUME);
 

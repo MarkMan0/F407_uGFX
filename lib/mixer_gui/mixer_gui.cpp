@@ -7,7 +7,7 @@
 
 static constexpr uint32_t MAX_LINES = 5;
 
-static MixerAPI api;
+static CommAPI api;
 static gFont font;
 struct SetVolumeHelper {
   using img_data_t = std::array<uint8_t, 5500>;
@@ -180,7 +180,7 @@ void mixer_gui_task(ISerial& uart) {
       continue;
     }
 
-    if (MixerAPI::ret_t::OK != api.load_volumes() || (not api.get_volumes()[0])) {
+    if (CommAPI::ret_t::OK != api.load_volumes() || (not api.get_volumes()[0])) {
       continue;
     }
 

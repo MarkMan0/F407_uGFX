@@ -32,7 +32,7 @@ namespace mixer {
 }  // namespace mixer
 
 
-class MixerAPI {
+class CommAPI {
 public:
   static inline constexpr size_t MAX_SUPPORTED_PROGRAMS = 5;
   using volume_t = std::optional<mixer::ProgramVolume>;

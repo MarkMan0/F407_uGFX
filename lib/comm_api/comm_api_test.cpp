@@ -96,7 +96,7 @@ fakeit::Mock<ISerial> create_mock() {
 auto mock = create_mock();
 void test_sequence() {
   MockHelp::populate_buff();
-  MixerAPI api;
+  CommAPI api;
   api.set_uart(&(mock.get()));
 
 
