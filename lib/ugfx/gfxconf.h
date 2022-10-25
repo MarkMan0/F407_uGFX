@@ -89,7 +89,7 @@
 //#define GDISP_NEED_PIXELREAD                         GFXOFF
 #define GDISP_NEED_CONTROL                           GFXON
 //#define GDISP_NEED_QUERY                             GFXOFF
-//#define GDISP_NEED_MULTITHREAD                       GFXOFF
+#define GDISP_NEED_MULTITHREAD                       GFXON
 //#define GDISP_NEED_STREAMING                         GFXOFF
 #define GDISP_NEED_TEXT                              GFXON
 //    #define GDISP_NEED_TEXT_WORDWRAP                 GFXOFF
@@ -195,7 +195,7 @@
 ///////////////////////////////////////////////////////////////////////////
 #define GFX_USE_GWIN                                 GFXON
 
-#define GWIN_NEED_WINDOWMANAGER                      GFXOFF
+#define GWIN_NEED_WINDOWMANAGER                      GFXON
 //    #define GWIN_REDRAW_IMMEDIATE                    GFXOFF
 //    #define GWIN_REDRAW_SINGLEOP                     GFXOFF
 //    #define GWIN_NEED_FLASHING                       GFXOFF
@@ -271,9 +271,9 @@
 ///////////////////////////////////////////////////////////////////////////
 // GQUEUE                                                                //
 ///////////////////////////////////////////////////////////////////////////
-//#define GFX_USE_GQUEUE                               GFXOFF
+#define GFX_USE_GQUEUE                               GFXON
 
-//#define GQUEUE_NEED_ASYNC                            GFXOFF
+#define GQUEUE_NEED_ASYNC                            GFXON
 //#define GQUEUE_NEED_GSYNC                            GFXOFF
 //#define GQUEUE_NEED_FSYNC                            GFXOFF
 //#define GQUEUE_NEED_BUFFERS                          GFXOFF
