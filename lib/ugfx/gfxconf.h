@@ -87,7 +87,7 @@
 //#define GDISP_NEED_CONVEX_POLYGON                    GFXOFF
 //#define GDISP_NEED_SCROLL                            GFXOFF
 //#define GDISP_NEED_PIXELREAD                         GFXOFF
-//#define GDISP_NEED_CONTROL                           GFXOFF
+#define GDISP_NEED_CONTROL                           GFXON
 //#define GDISP_NEED_QUERY                             GFXOFF
 //#define GDISP_NEED_MULTITHREAD                       GFXOFF
 //#define GDISP_NEED_STREAMING                         GFXOFF
@@ -193,7 +193,7 @@
 ///////////////////////////////////////////////////////////////////////////
 // GWIN                                                                  //
 ///////////////////////////////////////////////////////////////////////////
-//#define GFX_USE_GWIN                                 GFXON
+#define GFX_USE_GWIN                                 GFXON
 
 //#define GWIN_NEED_WINDOWMANAGER                      GFXOFF
 //    #define GWIN_REDRAW_IMMEDIATE                    GFXOFF
@@ -211,11 +211,11 @@
 //#define GWIN_NEED_GRAPH                              GFXOFF
 //#define GWIN_NEED_GL3D                               GFXOFF
 
-//#define GWIN_NEED_WIDGET                             GFXOFF
+#define GWIN_NEED_WIDGET                             GFXON
 //#define GWIN_FOCUS_HIGHLIGHT_WIDTH                   1
 //    #define GWIN_NEED_LABEL                          GFXOFF
 //        #define GWIN_LABEL_ATTRIBUTE                 GFXOFF
-//    #define GWIN_NEED_BUTTON                         GFXOFF
+    #define GWIN_NEED_BUTTON                         GFXON
 //        #define GWIN_BUTTON_LAZY_RELEASE             GFXOFF
 //    #define GWIN_NEED_SLIDER                         GFXOFF
 //        #define GWIN_SLIDER_NOSNAP                   GFXOFF
