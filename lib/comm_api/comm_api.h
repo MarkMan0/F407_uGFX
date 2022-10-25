@@ -53,7 +53,13 @@ public:
 
   void set_uart(ISerial*);
 
-public:
+  static CommAPI& get_instance() {
+    static CommAPI api;
+    return api;
+  }
+
+private:
+  CommAPI() = default;
   bool verify_read(size_t n);
   volume_t load_one();
   std::array<volume_t, MAX_SUPPORTED_PROGRAMS> volumes_;

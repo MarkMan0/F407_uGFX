@@ -96,12 +96,12 @@ fakeit::Mock<ISerial> create_mock() {
 auto mock = create_mock();
 void test_sequence() {
   MockHelp::populate_buff();
-  CommAPI api;
+  CommAPI& api = CommAPI::get_instance();
   api.set_uart(&(mock.get()));
 
 
   api.load_volumes();
-  std::optional opt = api.volumes_[0];
+  std::optional opt = api.get_volumes()[0];
   TEST_ASSERT_TRUE(opt.has_value());
   volatile bool b = opt.has_value();
   auto ret = *opt;

@@ -7,7 +7,8 @@
 
 static constexpr uint32_t MAX_LINES = 5;
 
-static CommAPI api;
+static CommAPI& api = CommAPI::get_instance();
+
 static gFont font;
 struct SetVolumeHelper {
   using img_data_t = std::array<uint8_t, 5500>;
@@ -152,8 +153,7 @@ std::array<SetVolumeHelper, MAX_LINES> gui_objs = { SetVolumeHelper(0), SetVolum
 
 
 
-void mixer_gui_task(ISerial& uart) {
-  api.set_uart(&uart);
+void mixer_gui_task() {
   font = gdispOpenFont("DejaVuSans12*");
   gwinSetDefaultStyle(&BlackWidgetStyle, false);
   gwinSetDefaultFont(font);

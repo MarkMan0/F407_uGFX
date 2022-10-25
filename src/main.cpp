@@ -31,6 +31,7 @@ void uart_task(void*) {
   pin_mode(pins::LED1, pin_mode_t::OUT_PP);
   uart.init();
   uart.set_tx_task(xTaskGetCurrentTaskHandle());
+  CommAPI::get_instance().set_uart(&uart);
   while (1) {
     toggle_pin(pins::LED1);
     uart.send_task();
@@ -45,7 +46,7 @@ void gfx_task(void*) {
 }
 
 extern "C" void uGFXMain() {
-  mixer_gui_task(uart);
+  mixer_gui_task();
 }
 
 int main(void) {
