@@ -195,7 +195,7 @@
 ///////////////////////////////////////////////////////////////////////////
 #define GFX_USE_GWIN                                 GFXON
 
-//#define GWIN_NEED_WINDOWMANAGER                      GFXOFF
+#define GWIN_NEED_WINDOWMANAGER                      GFXOFF
 //    #define GWIN_REDRAW_IMMEDIATE                    GFXOFF
 //    #define GWIN_REDRAW_SINGLEOP                     GFXOFF
 //    #define GWIN_NEED_FLASHING                       GFXOFF
