@@ -25,6 +25,7 @@ struct SetVolumeHelper {
     wi.g.y = base_y + line_ * multiplier;
     wi.g.height = 32;
     wi.g.width = 32;
+
     wi.text = "M";
     btn_mute_ = gwinButtonCreate(0, &wi);
 
@@ -33,8 +34,14 @@ struct SetVolumeHelper {
     wi.text = "-";
     btn_minus_ = gwinButtonCreate(0, &wi);
 
+
+    wi.g.x += multiplier;
+    wi.g.width = gdispGetWidth() - base_x - 3 * multiplier - base_x - multiplier;
+    wi.text = "%";
+    slider_ = gwinSliderCreate(0, &wi);
+
     wi.text = "+";
-    wi.g.x = gdispGetWidth() - base_x - wi.g.width;
+    wi.g.x = gdispGetWidth() - base_x - 32;
     btn_plus_ = gwinButtonCreate(0, &wi);
   }
 
@@ -43,18 +50,18 @@ struct SetVolumeHelper {
       return;
     }
     auto curr = *volume_;  // needed for debug, pio doesnt work with optional :/
-    show_btns();
 
-    draw_over_text();
-    char buff[21];
-    if (curr.muted_) {
-      snprintf(buff, 20, "Mute (%d%%)", curr.volume_);
-    } else {
-      snprintf(buff, 20, "%d%%", curr.volume_);
+    if (volume_changed_) {
+      volume_changed_ = false;
+      show_widgets();
+      if (curr.muted_) {
+        snprintf(slider_txt_.data(), slider_txt_.size() - 1, "Mute (%d%%)", curr.volume_);
+      } else {
+        snprintf(slider_txt_.data(), slider_txt_.size() - 1, "%d%%", curr.volume_);
+      }
+      gwinSliderSetPosition(slider_, curr.volume_);
+      gwinSetText(slider_, slider_txt_.data(), gFalse);
     }
-    gdispDrawStringBox(base_x + 3 * multiplier, base_y + line_ * multiplier,
-                       gdispGetWidth() - (base_x + 3 * multiplier) - (base_x + multiplier), multiplier, buff, font,
-                       GFX_WHITE, gJustifyCenter);
 
     if (not session_change_) {
       // pic is the same, dont draw over it
@@ -81,17 +88,18 @@ struct SetVolumeHelper {
     if (volume_ && volume_->pid_ == vol.pid_) {
       // picture haven't changed
       // session_change_ = false;
+      volume_changed_ = volume_changed_ || (vol.volume_ != volume_->volume_) || (vol.muted_ != volume_->muted_);
     } else {
       session_change_ = true;
+      volume_changed_ = true;
     }
     volume_ = vol;
   }
 
   void reset() {
     volume_ = std::nullopt;
-    hide_btns();
+    hide_widgets();
     draw_over_image();
-    draw_over_text();
   }
 
   void handle_event(const GEvent* ev) {
@@ -125,36 +133,36 @@ struct SetVolumeHelper {
   }
 
 private:
-  void hide_btns() {
+  void hide_widgets() {
     gwinHide(btn_mute_);
     gwinHide(btn_minus_);
     gwinHide(btn_plus_);
+    gwinHide(slider_);
   }
 
   void draw_over_image() {
     gdispFillArea(base_x, base_y + line_ * multiplier, 32, 32, GFX_BLACK);
   }
 
-  void draw_over_text() {
-    auto txt_width = gdispGetWidth() - (base_x + 3 * multiplier) - (base_x + multiplier);
-    gdispFillArea(base_x + 3 * multiplier, base_y + line_ * multiplier, txt_width, multiplier, GFX_BLACK);
-  }
 
-  void show_btns() {
+  void show_widgets() {
     gwinShow(btn_mute_);
     gwinShow(btn_minus_);
     gwinShow(btn_plus_);
+    gwinShow(slider_);
   }
 
   GHandle btn_plus_;
   GHandle btn_minus_;
   GHandle btn_mute_;
   gdispImage img_;
+  GHandle slider_;
   img_data_t img_data_;
   const int line_;
   std::optional<mixer::ProgramVolume> volume_;
   bool session_change_ = true;
-
+  bool volume_changed_ = false;
+  std::array<char, 30> slider_txt_ = { 0 };
 
   static constexpr unsigned base_x = 10;
   static constexpr unsigned base_y = 10;
