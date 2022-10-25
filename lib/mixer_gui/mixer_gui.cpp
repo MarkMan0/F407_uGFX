@@ -94,22 +94,19 @@ struct SetVolumeHelper {
     }
     const auto handle = ((GEventGWinButton*)ev)->gwin;
     bool need_change = false;
+
+    int16_t vol = volume_->volume_;  // so no underflow when minus
+    // finer control for master volume
+    const int16_t increment = volume_->pid_ == -1 ? 2 : 10;
     if (handle == btn_minus_) {
       need_change = true;
-      if (volume_->volume_ >= 10) {
-        volume_->volume_ -= 10;
-      } else {
-        volume_->volume_ = 0;
-      }
+      vol -= increment;
     } else if (handle == btn_plus_) {
       need_change = true;
-      if (volume_->volume_ <= 90) {
-        volume_->volume_ += 10;
-      } else {
-        volume_->volume_ = 100;
-      }
+      vol += increment;
     }
 
+    volume_->volume_ = utils::constrain(vol, 0, 100);
     if (need_change) {
       api.set_volume(*volume_);
     }
