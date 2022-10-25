@@ -1,5 +1,5 @@
 #ifdef TESTING
-  #include "mixer_api.h"
+  #include "comm_api.h"
   #include "ISerial.h"
   #include "fakeit.hpp"
   #include "unity.h"

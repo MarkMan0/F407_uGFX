@@ -4,7 +4,7 @@
 #include "pin_api.h"
 #include "gfx.h"
 #include "usb_device.h"
-#include "mixer_api.h"
+#include "comm_api.h"
 #include "mixer_gui.h"
 
 #include "usb_uart.h"

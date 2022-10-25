@@ -1,5 +1,5 @@
 #include "mixer_gui.h"
-#include "mixer_api.h"
+#include "comm_api.h"
 #include "gfx.h"
 #include "src/gwin/gwin_class.h"
 #include <array>
