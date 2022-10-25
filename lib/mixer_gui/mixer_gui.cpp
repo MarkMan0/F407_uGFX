@@ -16,16 +16,18 @@ struct SetVolumeHelper {
   }
 
   void init() {
-    gdispImageInit(&img_);
-
     GWidgetInit wi;
     gwinWidgetClearInit(&wi);
     wi.g.show = gFalse;
-    wi.g.x = base_x + multiplier;
+    wi.g.x = base_x;
     wi.g.y = base_y + line_ * multiplier;
     wi.g.height = 32;
     wi.g.width = 32;
 
+    img_handle_ = gwinImageCreate(0, &wi.g);
+    // gwinSetBgColor(img_handle_, GFX_BLACK);
+
+    wi.g.x += multiplier;
     wi.text = "M";
     btn_mute_ = gwinButtonCreate(0, &wi);
 
@@ -63,25 +65,17 @@ struct SetVolumeHelper {
       gwinSetText(slider_, slider_txt_.data(), gFalse);
     }
 
-    if (not session_change_) {
-      // pic is the same, dont draw over it
-      return;
+    if (session_change_) {
+      if (0 != api.load_image(curr.pid_, img_data_.data(), img_data_.size())) {
+        return;
+      }
+      gwinClear(img_handle_);
+      if (gTrue != gwinImageOpenMemory(img_handle_, img_data_.data())) {
+        return;
+      }
+      // all success, dont redraw next time
+      session_change_ = false;
     }
-    draw_over_image();
-    if (0 != api.load_image(curr.pid_, img_data_.data(), img_data_.size())) {
-      return;
-    }
-    gdispImageClose(&img_);
-    if (0 != gdispImageOpenMemory(&img_, img_data_.data())) {
-      return;
-    }
-
-    if (0 != gdispImageDraw(&img_, base_x, base_y + line_ * multiplier, 32, 32, 0, 0)) {
-      return;
-    }
-
-    // all success, dont redraw next time
-    session_change_ = false;
   }
 
   void set_volume(const mixer::ProgramVolume& vol) {
@@ -99,7 +93,6 @@ struct SetVolumeHelper {
   void reset() {
     volume_ = std::nullopt;
     hide_widgets();
-    draw_over_image();
   }
 
   void handle_event(const GEvent* ev) {
@@ -119,18 +112,16 @@ struct SetVolumeHelper {
 
 private:
   void hide_widgets() {
+    gwinHide(img_handle_);
     gwinHide(btn_mute_);
     gwinHide(btn_minus_);
     gwinHide(btn_plus_);
     gwinHide(slider_);
+    gwinHide(img_handle_);
   }
-
-  void draw_over_image() {
-    gdispFillArea(base_x, base_y + line_ * multiplier, 32, 32, GFX_BLACK);
-  }
-
 
   void show_widgets() {
+    gwinShow(img_handle_);
     gwinShow(btn_mute_);
     gwinShow(btn_minus_);
     gwinShow(btn_plus_);
@@ -178,10 +169,10 @@ private:
     }
   }
 
+  GHandle img_handle_;
   GHandle btn_plus_;
   GHandle btn_minus_;
   GHandle btn_mute_;
-  gdispImage img_;
   GHandle slider_;
   img_data_t img_data_;
   const int line_;

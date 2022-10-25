@@ -222,7 +222,7 @@
         #define GWIN_SLIDER_DEAD_BAND                1
 //        #define GWIN_SLIDER_TOGGLE_INC               20
 //    #define GWIN_NEED_CHECKBOX                       GFXOFF
-//    #define GWIN_NEED_IMAGE                          GFXOFF
+    #define GWIN_NEED_IMAGE                          GFXON
 //        #define GWIN_NEED_IMAGE_ANIMATION            GFXOFF
 //    #define GWIN_NEED_RADIO                          GFXOFF
 //    #define GWIN_NEED_LIST                           GFXOFF
