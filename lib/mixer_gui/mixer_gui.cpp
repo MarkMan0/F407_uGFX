@@ -73,6 +73,33 @@ struct SetVolumeHelper {
     draw_over_image();
   }
 
+  void handle_event(const GEvent* ev) {
+    if (not volume_) {
+      return;
+    }
+    const auto handle = ((GEventGWinButton*)ev)->gwin;
+    bool need_change = false;
+    if (handle == btn_minus_) {
+      need_change = true;
+      if (volume_->volume_ >= 10) {
+        volume_->volume_ -= 10;
+      } else {
+        volume_->volume_ = 0;
+      }
+    } else if (handle == btn_plus_) {
+      need_change = true;
+      if (volume_->volume_ <= 90) {
+        volume_->volume_ += 10;
+      } else {
+        volume_->volume_ = 100;
+      }
+    }
+
+    if (need_change) {
+      api.set_volume(*volume_);
+    }
+  }
+
 private:
   void hide_btns() {
     gwinHide(btn_mute_);
@@ -120,18 +147,29 @@ void mixer_gui_task(ISerial& uart) {
   gwinSetDefaultStyle(&BlackWidgetStyle, false);
   gwinSetDefaultFont(font);
 
+
+  GListener gl;
+  geventListenerInit(&gl);
+  gwinAttachListener(&gl);
+
   for (auto& helper : gui_objs) {
     helper.init();
   }
 
   while (1) {
+    GEvent* pe = geventEventWait(&gl, 1000);
+
+    if (pe && pe->type == GEVENT_GWIN_BUTTON) {
+      for (auto& obj : gui_objs) {
+        obj.handle_event(pe);
+      }
+    }
+
     if (not api.changes()) {
-      vTaskDelay(500);
       continue;
     }
 
     if (MixerAPI::ret_t::OK != api.load_volumes() || (not api.get_volumes()[0])) {
-      vTaskDelay(500);
       continue;
     }
 
@@ -149,7 +187,5 @@ void mixer_gui_task(ISerial& uart) {
     for (; line < gui_objs.size(); ++line) {
       gui_objs[line].reset();
     }
-
-    vTaskDelay(1000);
   }
 }
