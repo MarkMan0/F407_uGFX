@@ -4,4 +4,3 @@
  * The files have been converted using...
  * 		file2c -dbcs infile outfile
  */
-#include "romfs_testpal8.h"
