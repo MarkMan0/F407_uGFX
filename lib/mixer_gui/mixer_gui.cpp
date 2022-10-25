@@ -46,11 +46,11 @@ struct SetVolumeHelper {
     show_btns();
 
     draw_over_text();
-    char buff[15];
+    char buff[21];
     if (curr.muted_) {
-      strncpy(buff, "Muted", 15);
+      snprintf(buff, 20, "Mute (%d%%)", curr.volume_);
     } else {
-      snprintf(buff, 14, "%d%%", curr.volume_);
+      snprintf(buff, 20, "%d%%", curr.volume_);
     }
     gdispDrawStringBox(base_x + 3 * multiplier, base_y + line_ * multiplier,
                        gdispGetWidth() - (base_x + 3 * multiplier) - (base_x + multiplier), multiplier, buff, font,
