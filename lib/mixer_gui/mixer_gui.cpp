@@ -56,7 +56,6 @@ struct SetVolumeHelper {
       // pic is the same, dont draw over it
       return;
     }
-    session_change_ = false;
     draw_over_image();
     if (0 != api.load_image(volume_->pid_, img_data_.data(), img_data_.size())) {
       return;
@@ -66,7 +65,12 @@ struct SetVolumeHelper {
       return;
     }
 
-    gdispImageDraw(&img_, base_x, base_y + line_ * multiplier, 32, 32, 0, 0);
+    if (0 != gdispImageDraw(&img_, base_x, base_y + line_ * multiplier, 32, 32, 0, 0)) {
+      return;
+    }
+
+    // all success, dont redraw next time
+    session_change_ = false;
   }
 
   void set_volume(const mixer::ProgramVolume& vol) {
