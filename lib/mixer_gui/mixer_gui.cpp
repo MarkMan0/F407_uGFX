@@ -8,7 +8,7 @@
 static constexpr uint32_t MAX_LINES = 5;
 
 static MixerAPI api;
-
+static gFont font;
 struct SetVolumeHelper {
   using img_data_t = std::array<uint8_t, 5500>;
   SetVolumeHelper(int line) : line_(line) {
@@ -48,6 +48,13 @@ struct SetVolumeHelper {
     }
     show_btns();
 
+    draw_over_text();
+    char buff[15];
+    snprintf(buff, 14, "%d%%", volume_->volume_);
+    gdispDrawStringBox(base_x + 3 * multiplier, base_y + line_ * multiplier,
+                       gdispGetWidth() - (base_x + 3 * multiplier) - (base_x + multiplier), multiplier, buff, font,
+                       GFX_WHITE, gJustifyCenter);
+
     gdispImageClose(&img_);
     if (0 != gdispImageOpenMemory(&img_, img_data_.data())) {
       return;
@@ -77,6 +84,11 @@ private:
     gdispFillArea(base_x, base_y + line_ * multiplier, 32, 32, GFX_BLACK);
   }
 
+  void draw_over_text() {
+    auto txt_width = gdispGetWidth() - (base_x + 3 * multiplier) - (base_x + multiplier);
+    gdispFillArea(base_x + 3 * multiplier, base_y + line_ * multiplier, txt_width, multiplier, GFX_BLACK);
+  }
+
   void show_btns() {
     gwinShow(btn_mute_);
     gwinShow(btn_minus_);
@@ -104,8 +116,9 @@ std::array<SetVolumeHelper, MAX_LINES> gui_objs = { SetVolumeHelper(0), SetVolum
 
 void mixer_gui_task(ISerial& uart) {
   api.set_uart(&uart);
+  font = gdispOpenFont("DejaVuSans12*");
   gwinSetDefaultStyle(&BlackWidgetStyle, false);
-  gwinSetDefaultFont(gdispOpenFont("DejaVuSans12*"));
+  gwinSetDefaultFont(font);
 
   for (auto& helper : gui_objs) {
     helper.init();
