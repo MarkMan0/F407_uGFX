@@ -174,7 +174,7 @@ private:
   GHandle btn_minus_;
   GHandle btn_mute_;
   GHandle slider_;
-  img_data_t img_data_;
+  static img_data_t img_data_;
   const int line_;
   std::optional<mixer::ProgramVolume> volume_;
   bool session_change_ = true;
@@ -185,6 +185,8 @@ private:
   static constexpr unsigned base_y = 10;
   static constexpr unsigned multiplier = 40;
 };
+
+SetVolumeHelper::img_data_t SetVolumeHelper::img_data_;
 
 std::array<SetVolumeHelper, MAX_LINES> gui_objs = { SetVolumeHelper(0), SetVolumeHelper(1), SetVolumeHelper(2),
                                                     SetVolumeHelper(3), SetVolumeHelper(4) };
