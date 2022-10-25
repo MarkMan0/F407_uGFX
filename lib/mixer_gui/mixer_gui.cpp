@@ -102,8 +102,7 @@ struct SetVolumeHelper {
 
 
     if (handle == btn_mute_) {
-      volume_->muted_ = not volume_->muted_;
-      api.set_mute(*volume_);
+      api.set_mute(volume_->pid_, not volume_->muted_);
       return;
     }
 
@@ -120,9 +119,8 @@ struct SetVolumeHelper {
       vol += increment;
     }
 
-    volume_->volume_ = utils::constrain(vol, 0, 100);
     if (need_change) {
-      api.set_volume(*volume_);
+      api.set_volume(volume_->pid_, utils::constrain(vol, 0, 100));
     }
   }
 

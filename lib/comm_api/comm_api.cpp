@@ -135,18 +135,18 @@ CommAPI::ret_t CommAPI::load_image(int16_t pid, uint8_t* buff, size_t max_sz) {
   return ret_t::OK;
 }
 
-void CommAPI::set_volume(const mixer::ProgramVolume& vol) {
+void CommAPI::set_volume(int16_t pid, uint8_t vol) {
   uart_->empty_rx();
   uart_->write(mixer::commands::SET_VOLUME);
 
-  static_assert(std::is_same<int16_t, decltype(vol.pid_)>::value);
-  static_assert(std::is_same<uint8_t, decltype(vol.volume_)>::value);
+  static_assert(std::is_same<int16_t, decltype(mixer::ProgramVolume::pid_)>::value);
+  static_assert(std::is_same<uint8_t, decltype(mixer::ProgramVolume::volume_)>::value);
 
-  constexpr size_t buff_sz = sizeof(vol.pid_) + sizeof(vol.volume_) + sizeof(uint32_t);
+  constexpr size_t buff_sz = sizeof(pid) + sizeof(vol) + sizeof(uint32_t);
 
   uint8_t msg_buff[buff_sz] = { 0 };
-  *reinterpret_cast<int16_t*>(msg_buff) = vol.pid_;
-  *reinterpret_cast<uint8_t*>(msg_buff + 2) = vol.volume_;
+  *reinterpret_cast<int16_t*>(msg_buff) = pid;
+  *reinterpret_cast<uint8_t*>(msg_buff + 2) = vol;
   *reinterpret_cast<uint32_t*>(msg_buff + 3) = utils::crc32mpeg2(msg_buff, 3);
 
 
@@ -159,12 +159,12 @@ void CommAPI::echo(const char* c) {
   uart_->write(c);
 }
 
-void CommAPI::set_mute(const mixer::ProgramVolume& vol) {
+void CommAPI::set_mute(int16_t pid, bool mute) {
   constexpr size_t buff_sz = 1 + 2 + 1 + 4;  // cmd, pid, muted, crc
   uint8_t buff[buff_sz];
   buff[0] = mixer::commands::SET_MUTE;
-  *reinterpret_cast<int16_t*>(buff + 1) = vol.pid_;
-  buff[3] = vol.muted_;
+  *reinterpret_cast<int16_t*>(buff + 1) = pid;
+  buff[3] = mute;
 
   *reinterpret_cast<uint32_t*>(buff + 4) = utils::crc32mpeg2(buff + 1, buff_sz - 5);
 

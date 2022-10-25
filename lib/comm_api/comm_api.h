@@ -40,9 +40,9 @@ public:
   using ret_t = mixer::MixerError_t;
 
   ret_t load_volumes();
-  void set_volume(const mixer::ProgramVolume&);
+  void set_volume(int16_t pid, uint8_t vol);
   ret_t load_image(int16_t pid, uint8_t* buff, size_t sz);
-  void set_mute(const mixer::ProgramVolume&);
+  void set_mute(int16_t pid, bool mute);
 
   void echo(const char*);
 
