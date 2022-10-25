@@ -17,6 +17,11 @@ namespace UART_TimingConfig {
 
 class USB_UART : public ISerial {
 public:
+  static USB_UART& get_instance() {
+    static USB_UART self;
+    return self;
+  }
+
   void init();
 
   size_t available() const override;
@@ -101,12 +106,12 @@ public:
   friend void ::USB_CDC_Receive_callback(uint8_t* buff, size_t len);
 
 private:
+  USB_UART() = default;
+  USB_UART(const USB_UART&) = delete;
+  USB_UART& operator=(const USB_UART&) = delete;
   void notify_tx_task();
   xTaskHandle tx_task_{};
   xSemaphoreHandle flush_mtx_{};
   RingBuffer<uint8_t, 512, true> rx_buffer_;
   RingBuffer<uint8_t, 512> tx_buffer_;
 };
-
-
-extern USB_UART uart;

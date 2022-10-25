@@ -9,11 +9,10 @@
 
 #include "usb_uart.h"
 
-USB_UART uart;
 
 
 void USB_CDC_Receive_callback(uint8_t* buff, size_t size) {
-  uart.rx_buffer_.push(buff, size);
+  USB_UART::get_instance().rx_buffer_.push(buff, size);
 }
 
 
@@ -29,6 +28,7 @@ void blink_task(void*) {
 
 void uart_task(void*) {
   pin_mode(pins::LED1, pin_mode_t::OUT_PP);
+  auto& uart = USB_UART::get_instance();
   uart.init();
   uart.set_tx_task(xTaskGetCurrentTaskHandle());
   CommAPI::get_instance().set_uart(&uart);
