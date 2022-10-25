@@ -64,3 +64,13 @@ int main(void) {
   while (1) {
   }
 }
+
+extern "C" void vApplicationStackOverflowHook(xTaskHandle pxTask, char* pcTaskName) {
+  vPortEnterCritical();
+  Error_Handler();
+}
+
+extern "C" void vApplicationMallocFailedHook(void) {
+  vPortEnterCritical();
+  Error_Handler();
+}
