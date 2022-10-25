@@ -2,6 +2,7 @@
 #include <cstring>
 #include "utils.h"
 #include <type_traits>
+#include "sem_lock.h"
 
 namespace mixer {
   enum commands : uint8_t {
@@ -33,6 +34,8 @@ bool CommAPI::verify_read(size_t n) {
 }
 
 CommAPI::ret_t CommAPI::load_volumes() {
+  utils::Lock lck(mtx_);
+
   uart_->empty_rx();
 
   uart_->write(mixer::commands::LOAD_ALL);
@@ -85,12 +88,14 @@ CommAPI::volume_t CommAPI::load_one() {
   return vol;
 }
 
-void CommAPI::set_uart(ISerial* u) {
+void CommAPI::init(ISerial* u) {
   uart_ = u;
+  mtx_ = xSemaphoreCreateMutex();
 }
 
 
 CommAPI::ret_t CommAPI::load_image(int16_t pid, uint8_t* buff, size_t max_sz) {
+  utils::Lock lck(mtx_);
   uart_->empty_rx();
   uart_->write(mixer::commands::READ_IMG);
 
@@ -136,6 +141,7 @@ CommAPI::ret_t CommAPI::load_image(int16_t pid, uint8_t* buff, size_t max_sz) {
 }
 
 void CommAPI::set_volume(int16_t pid, uint8_t vol) {
+  utils::Lock lck(mtx_);
   uart_->empty_rx();
   uart_->write(mixer::commands::SET_VOLUME);
 
@@ -155,11 +161,13 @@ void CommAPI::set_volume(int16_t pid, uint8_t vol) {
 }
 
 void CommAPI::echo(const char* c) {
+  utils::Lock lck(mtx_);
   uart_->write(mixer::commands::ECHO);
   uart_->write(c);
 }
 
 void CommAPI::set_mute(int16_t pid, bool mute) {
+  utils::Lock lck(mtx_);
   constexpr size_t buff_sz = 1 + 2 + 1 + 4;  // cmd, pid, muted, crc
   uint8_t buff[buff_sz];
   buff[0] = mixer::commands::SET_MUTE;

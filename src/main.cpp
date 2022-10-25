@@ -31,7 +31,7 @@ void uart_task(void*) {
   auto& uart = USB_UART::get_instance();
   uart.init();
   uart.set_tx_task(xTaskGetCurrentTaskHandle());
-  CommAPI::get_instance().set_uart(&uart);
+  CommAPI::get_instance().init(&uart);
   while (1) {
     toggle_pin(pins::LED1);
     uart.send_task();

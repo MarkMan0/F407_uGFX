@@ -3,6 +3,8 @@
 #include "ISerial.h"
 #include "utils.h"
 #include <array>
+#include "FreeRTOS.h"
+#include "semphr.h"
 
 #ifdef TESTING
 void mixer_api_test();
@@ -55,7 +57,7 @@ public:
     return volumes_;
   }
 
-  void set_uart(ISerial*);
+  void init(ISerial*);
 
   static CommAPI& get_instance() {
     static CommAPI api;
@@ -72,4 +74,5 @@ private:
   ISerial* uart_;
   static inline constexpr size_t BUFF_SZ = 256;
   uint8_t buffer_[BUFF_SZ];
+  SemaphoreHandle_t mtx_;
 };
