@@ -64,6 +64,8 @@ public:
 
 private:
   CommAPI() = default;
+  CommAPI(const CommAPI&) = delete;
+  CommAPI& operator=(const CommAPI&) = delete;
   bool verify_read(size_t n);
   volume_t load_one();
   std::array<volume_t, MAX_SUPPORTED_PROGRAMS> volumes_;
