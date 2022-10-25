@@ -9,6 +9,7 @@ namespace mixer {
     READ_IMG = 0x02,
     SET_VOLUME = 0x03,
     ECHO = 0x04,
+    SET_MUTE = 0x05,
     RESPONSE_OK = 0xA0,
   };
 }
@@ -156,4 +157,16 @@ void CommAPI::set_volume(const mixer::ProgramVolume& vol) {
 void CommAPI::echo(const char* c) {
   uart_->write(mixer::commands::ECHO);
   uart_->write(c);
+}
+
+void CommAPI::set_mute(const mixer::ProgramVolume& vol) {
+  constexpr size_t buff_sz = 1 + 2 + 1 + 4;  // cmd, pid, muted, crc
+  uint8_t buff[buff_sz];
+  buff[0] = mixer::commands::SET_MUTE;
+  *reinterpret_cast<int16_t*>(buff + 1) = vol.pid_;
+  buff[3] = vol.muted_;
+
+  *reinterpret_cast<uint32_t*>(buff + 4) = utils::crc32mpeg2(buff + 1, buff_sz - 5);
+
+  uart_->write(buff, buff_sz);
 }

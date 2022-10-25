@@ -99,6 +99,14 @@ struct SetVolumeHelper {
       return;
     }
     const auto handle = ((GEventGWinButton*)ev)->gwin;
+
+
+    if (handle == btn_mute_) {
+      volume_->muted_ = not volume_->muted_;
+      api.set_mute(*volume_);
+      return;
+    }
+
     bool need_change = false;
 
     int16_t vol = volume_->volume_;  // so no underflow when minus
