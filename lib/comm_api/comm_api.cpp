@@ -11,6 +11,7 @@ namespace mixer {
     SET_VOLUME = 0x03,
     ECHO = 0x04,
     SET_MUTE = 0x05,
+    QUERY_CHANGES = 0x06,
     RESPONSE_OK_0 = 0xA0,
     RESPONSE_OK_1 = 0xA1,
   };
@@ -185,4 +186,20 @@ void CommAPI::set_mute(int16_t pid, bool mute) {
   *reinterpret_cast<uint32_t*>(buff + 4) = utils::crc32mpeg2(buff + 1, buff_sz - 5);
 
   uart_->write(buff, buff_sz);
+}
+
+
+bool CommAPI::changes() {
+  utils::Lock lck(mtx_);
+  uart_->flush();
+  uart_->empty_rx();
+
+  uart_->write(mixer::commands::QUERY_CHANGES);
+
+  uart_->flush();
+
+  if (not verify_read(sizeof(uint8_t))) {
+    return false;
+  }
+  return *buffer_;
 }
