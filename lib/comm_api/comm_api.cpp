@@ -11,7 +11,8 @@ namespace mixer {
     SET_VOLUME = 0x03,
     ECHO = 0x04,
     SET_MUTE = 0x05,
-    RESPONSE_OK = 0xA0,
+    RESPONSE_OK_0 = 0xA0,
+    RESPONSE_OK_1 = 0xA1,
   };
 }
 
@@ -55,6 +56,9 @@ CommAPI::ret_t CommAPI::load_volumes() {
       return ret_t::CRC_ERR;
     }
   }
+
+  const uint8_t buff[] = { mixer::commands::RESPONSE_OK_0, mixer::commands::RESPONSE_OK_1 };
+  uart_->write(buff, 2);
   return ret_t::OK;
 }
 
@@ -137,7 +141,7 @@ CommAPI::ret_t CommAPI::load_image(int16_t pid, uint8_t* buff, size_t max_sz) {
 
     memcpy(buff + read_bytes, buffer_, bytes_to_read);
     read_bytes += bytes_to_read;
-    uart_->write(mixer::commands::RESPONSE_OK);
+    uart_->write(mixer::commands::RESPONSE_OK_0);
     uart_->flush();
   }
 
