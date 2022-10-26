@@ -9,6 +9,10 @@
 #include <cassert>
 #include <array>
 
+#ifdef TESTING
+void pin_api_test();
+#endif
+
 /// @brief All existing pins
 enum pin_name : uint8_t {
   // clang-format off
