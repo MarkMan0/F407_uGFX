@@ -180,11 +180,11 @@ private:
     }
   }
 
-  GHandle img_handle_;
-  GHandle btn_plus_;
-  GHandle btn_minus_;
-  GHandle btn_mute_;
-  GHandle slider_;
+  GHandle img_handle_{};
+  GHandle btn_plus_{};
+  GHandle btn_minus_{};
+  GHandle btn_mute_{};
+  GHandle slider_{};
   const int line_;
   std::optional<mixer::ProgramVolume> volume_;
   bool session_change_ = true;               ///< If true, picture will be redrawn
