@@ -2,10 +2,11 @@
 
 Gadget, to change volume levels of windows applications, like in the GUI.
 
-## Why
-Changing the volume of some apps is troublesome and requires switching to the application to change its volume. In some cases, it's not trivial to change the volume in the app itself. This device will allow you to change the volume of applications in an external display, as you would in the built-in volume mixer.
+## Hardware
 
-I've found a similar project, [deej](https://github.com/omriharel/deej), but I wanted something dynamic - it shows the apps that are currently open. I had an STM32F4 lying around, with a touch LCD, so I decided to make my own.
+The MCU is and [STM32F407VET6](https://www.st.com/en/microcontrollers-microprocessors/stm32f407ve.html). It's seated on a [Black-F407VET6 board](https://stm32-base.org/boards/STM32F407VET6-STM32-F4VE-V2.0.html).
+
+The display uses the *ILI9341* chip for the LCD and *ADS7843* for the resistive touch panel.
 
 ## Project Structure
 The project is built in Platformio, and it's based on ST HAL libraries. No external library is used, and it's ready to build after download, Platformio will handle the dependencies. The application runs on FreeRTOS.
