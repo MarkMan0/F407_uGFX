@@ -48,6 +48,7 @@ namespace MockHelp {
     auto from = idx;
     insert(volume.pid_);
     insert(volume.volume_);
+    insert(static_cast<uint8_t>(volume.muted_));
     insert(name_sz);
     insert(crc_from_to(from, idx));
 
