@@ -12,10 +12,26 @@ namespace mixer {
     ECHO = 0x04,
     SET_MUTE = 0x05,
     QUERY_CHANGES = 0x06,
-    RESPONSE_OK_0 = 0xA0,
-    RESPONSE_OK_1 = 0xA1,
+    RESPONSE_OK = 0xA0,
+    RESPONSE_FAIL = 0xB0,
   };
 }
+
+namespace CRC_Cache {
+  constexpr std::array<uint8_t, 5> calc_crc(uint8_t val) {
+    uint32_t crc = utils::crc32mpeg2(&val, 1);
+    std::array<uint8_t, 5> ret{};
+    ret[0] = val;
+    ret[1] = (crc)&0xFF;
+    ret[2] = (crc >> 8) & 0xFF;
+    ret[3] = (crc >> 16) & 0xFF;
+    ret[4] = (crc >> 24) & 0xFF;
+    return ret;
+  }
+
+  constexpr auto response_ok = calc_crc(mixer::commands::RESPONSE_OK);
+  constexpr auto response_fail = calc_crc(mixer::commands::RESPONSE_FAIL);
+};  // namespace CRC_Cache
 
 bool CommAPI::verify_read(size_t n) {
   if (0 == uart_->wait_for(n + 4)) {
@@ -42,7 +58,7 @@ CommAPI::ret_t CommAPI::load_volumes() {
   uart_->flush();
 
   if (not verify_read(sizeof(uint8_t))) {
-    return ret_t::CRC_ERR;
+    return comm_failure();
   }
 
   uint8_t n_data = buffer_[0];
@@ -54,13 +70,11 @@ CommAPI::ret_t CommAPI::load_volumes() {
   for (unsigned i = 0; i < n_data; ++i) {
     volumes_[i] = load_one();
     if (not volumes_[i]) {
-      return ret_t::CRC_ERR;
+      return comm_failure();
     }
   }
 
-  const uint8_t buff[] = { mixer::commands::RESPONSE_OK_0, mixer::commands::RESPONSE_OK_1 };
-  uart_->write(buff, 2);
-  return ret_t::OK;
+  return comm_success();
 }
 
 
@@ -117,12 +131,13 @@ CommAPI::ret_t CommAPI::load_image(int16_t pid, uint8_t* buff, size_t max_sz) {
   uart_->flush();
 
   if (not verify_read(sizeof(uint32_t))) {
-    return ret_t::CRC_ERR;
+    return comm_failure();
   }
 
   const uint32_t msg_len = utils::mem2T<uint32_t>(buffer_);
 
   if (max_sz < msg_len) {
+    comm_failure();
     return ret_t::BUFF_SZ_ERR;
   }
 
@@ -137,13 +152,12 @@ CommAPI::ret_t CommAPI::load_image(int16_t pid, uint8_t* buff, size_t max_sz) {
   for (uint32_t read_bytes = 0; read_bytes < msg_len;) {
     uint32_t bytes_to_read = std::min(chunk_size, msg_len - read_bytes);
     if (not verify_read(bytes_to_read)) {
-      return ret_t::CRC_ERR;
+      return comm_failure();
     }
 
     memcpy(buff + read_bytes, buffer_, bytes_to_read);
     read_bytes += bytes_to_read;
-    uart_->write(mixer::commands::RESPONSE_OK_0);
-    uart_->flush();
+    comm_success();
   }
 
   return ret_t::OK;
@@ -202,4 +216,18 @@ bool CommAPI::changes() {
     return false;
   }
   return *buffer_;
+}
+
+CommAPI::ret_t CommAPI::comm_failure() {
+  uart_->write(CRC_Cache::response_fail.data(), CRC_Cache::response_fail.size());
+  uart_->flush();
+  uart_->empty_rx();
+  return ret_t::CRC_ERR;
+}
+
+CommAPI::ret_t CommAPI::comm_success() {
+  uart_->write(CRC_Cache::response_ok.data(), CRC_Cache::response_ok.size());
+  uart_->flush();
+  uart_->empty_rx();
+  return ret_t::OK;
 }

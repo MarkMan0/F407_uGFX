@@ -93,6 +93,14 @@ private:
   CommAPI(const CommAPI&) = delete;
   CommAPI& operator=(const CommAPI&) = delete;
 
+  /// @brief Send failure data to port
+  /// @return always ret_t::CRC_ERR
+  ret_t comm_failure();
+
+  /// @brief Send success data to port
+  /// @return always ret_t::OK
+  ret_t comm_success();
+
   /// @brief reads n+4 bytes and checks CRC at the end of buffer
   /// @details uses timeout from UART. Reads into internal buffer
   /// @param n number of bytes to read, without CRC
