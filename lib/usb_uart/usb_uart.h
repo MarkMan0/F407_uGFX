@@ -1,14 +1,12 @@
 #pragma once
-#include "STHAL.h"
 #include "ring_buffer.h"
 #include "utils.h"
 #include "FreeRTOS.h"
 #include "task.h"
 #include "semphr.h"
 #include "ISerial.h"
+#include "IHWMessage.h"
 
-/// @brief Called by STM32 HAL
-extern "C" void USB_CDC_Receive_callback(uint8_t* buff, size_t len);
 
 /// @brief Define basic timeouts for UART
 namespace UART_TimingConfig {
@@ -109,7 +107,16 @@ public:
   /// @brief Called from transmit task to empty tx buffer
   void send_task();
 
-  friend void ::USB_CDC_Receive_callback(uint8_t* buff, size_t len);
+  /// @brief Put data from HW interface to internal buffer
+  /// @param buff incoming data
+  /// @param len length of buff in bytes
+  void receive(const void* buff, size_t len);
+
+  /// @brief set the adaptor from the hardware
+  /// @param msg pointer to class implementing interface
+  void set_hw_msg(IHWMessage* msg) {
+    hw_msg_ = msg;
+  }
 
 private:
   USB_UART() = default;
@@ -120,4 +127,5 @@ private:
   xSemaphoreHandle flush_mtx_{};  ///< flush can be called by user and task, need to lock it
   RingBuffer<uint8_t, 512, true> rx_buffer_;
   RingBuffer<uint8_t, 512> tx_buffer_;
+  IHWMessage* hw_msg_ = nullptr;
 };

@@ -1,13 +1,10 @@
 #include "usb_uart.h"
-#include "usbd_cdc.h"
-#include "usb_device.h"
-#include "usbd_cdc_if.h"
 #include "sem_lock.h"
 
 
 
 void USB_UART::init() {
-  MX_USB_DEVICE_Init();
+  hw_msg_->init();
   flush_mtx_ = xSemaphoreCreateMutex();
 }
 
@@ -77,7 +74,7 @@ void USB_UART::empty_rx() {
 }
 
 void USB_UART::flush() {
-  if (hUsbDeviceFS.dev_state != USBD_STATE_CONFIGURED) {
+  if (not hw_msg_->status()) {
     // not connected
     return;
   }
@@ -85,7 +82,7 @@ void USB_UART::flush() {
 
   uint32_t cnt = UART_TimingConfig::WRITE_MAX_RETRY;
   while (auto n = tx_buffer_.size_cont()) {
-    if (USBD_OK == CDC_Transmit_FS(const_cast<uint8_t*>(&tx_buffer_.peek()), n)) {
+    if (n == hw_msg_->transmit(&(tx_buffer_.peek()), n)) {
       tx_buffer_.pop(n);
     } else {
       if (--cnt == 0) {
@@ -108,4 +105,8 @@ void USB_UART::set_tx_task(xTaskHandle h) {
 
 void USB_UART::notify_tx_task() {
   xTaskNotify(tx_task_, 0, eNoAction);
+}
+
+void USB_UART::receive(const void* buff, size_t len) {
+  rx_buffer_.push(static_cast<const uint8_t*>(buff), len);
 }

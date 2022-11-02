@@ -6,6 +6,9 @@
 #include "usb_device.h"
 #include "usbd_cdc_if.h"
 
+extern "C" void USB_CDC_Receive_callback(uint8_t* buff, size_t size);
+
+/// @brief CDC wrapper to be used in the communicator class
 class CDC_Adaptor : public IHWMessage {
 public:
   void init() override {
@@ -21,7 +24,11 @@ public:
     }
   }
 
+  bool status() const override {
+    return hUsbDeviceFS.dev_state == USBD_STATE_CONFIGURED;
+  }
 
+  /// @brief This is called from the CDC interrupt. Forwards data to receive callback
   void receive(void* buff, size_t sz) {
     if (receive_cb_) {
       receive_cb_(buff, sz);

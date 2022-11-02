@@ -9,11 +9,20 @@
 
 #include "usb_uart.h"
 
+#include "CDC_Adaptor.h"
 
+
+/// @brief Will be called by CDC IRQ to put data into internal buffer
+/// @param buff the incoming data
+/// @param size length of data
+static void USB_UART_receive(const void* buff, size_t size) {
+  USB_UART::get_instance().receive(buff, size);
+}
 
 void USB_CDC_Receive_callback(uint8_t* buff, size_t size) {
-  USB_UART::get_instance().rx_buffer_.push(buff, size);
+  CDC_Adaptor::get_instance().receive(buff, size);
 }
+
 
 void monitor_task(void*) {
   vTaskDelay(pdMS_TO_TICKS(30000));
@@ -44,6 +53,10 @@ void monitor_task(void*) {
 void uart_task(void*) {
   pin_mode(pins::LED1, pin_mode_t::OUT_PP);
   auto& uart = USB_UART::get_instance();
+
+  CDC_Adaptor::get_instance().set_receive_cb(USB_UART_receive);
+  uart.set_hw_msg(&(CDC_Adaptor::get_instance()));
+
   uart.init();
   uart.set_tx_task(xTaskGetCurrentTaskHandle());
   CommAPI::get_instance().init(&uart);
