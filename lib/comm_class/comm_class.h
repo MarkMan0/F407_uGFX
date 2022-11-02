@@ -16,11 +16,7 @@ namespace UART_TimingConfig {
 /// @brief Implementation of Serial interface over USB CDC
 class CommClass {
 public:
-  /// @brief get reference to singleton
-  static CommClass& get_instance() {
-    static CommClass self;
-    return self;
-  }
+  CommClass() = default;
 
   /// @brief Initialize the USB CDC interface
   void init();
@@ -75,31 +71,6 @@ public:
     }
   }
 
-  char c() {
-    return read<char>();
-  }
-  uint8_t u8() {
-    return read<uint8_t>();
-  }
-  uint16_t u16() {
-    return read<uint16_t>();
-  }
-  uint32_t u32() {
-    return read<uint32_t>();
-  }
-  int8_t i8() {
-    return read<int8_t>();
-  }
-  int16_t i16() {
-    return read<int16_t>();
-  }
-  int32_t i32() {
-    return read<int32_t>();
-  }
-  float flt() {
-    return read<float>();
-  }
-
   /// @brief Set transmit task, which will be notified when write() is called
   void set_tx_task(xTaskHandle);
 
@@ -118,7 +89,6 @@ public:
   }
 
 private:
-  CommClass() = default;
   CommClass(const CommClass&) = delete;
   CommClass& operator=(const CommClass&) = delete;
   void notify_tx_task();

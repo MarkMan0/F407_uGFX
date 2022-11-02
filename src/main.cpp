@@ -12,6 +12,7 @@
 #include "CDC_Adaptor.h"
 
 
+static CommClass uart;
 
 void monitor_task(void*) {
   vTaskDelay(pdMS_TO_TICKS(30000));
@@ -41,10 +42,8 @@ void monitor_task(void*) {
 
 void uart_task(void*) {
   pin_mode(pins::LED1, pin_mode_t::OUT_PP);
-  auto& uart = CommClass::get_instance();
 
-  CDC_Adaptor::get_instance().set_receive_cb(
-      [](const void* buff, size_t sz) { CommClass::get_instance().receive(buff, sz); });
+  CDC_Adaptor::get_instance().set_receive_cb([](const void* buff, size_t sz) { uart.receive(buff, sz); });
   uart.set_hw_msg(&(CDC_Adaptor::get_instance()));
 
   uart.init();

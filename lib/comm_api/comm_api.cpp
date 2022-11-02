@@ -41,10 +41,10 @@ bool CommAPI::verify_read(size_t n) {
 
   // read data
   for (i = 0; i < n; ++i) {
-    buffer_[i] = uart_->u8();
+    buffer_[i] = uart_->read<uint8_t>();
   }
   auto crc = utils::crc32mpeg2(buffer_, n);
-  uint32_t crc_in = uart_->u32();
+  uint32_t crc_in = uart_->read<uint32_t>();
 
   return crc == crc_in;
 }
