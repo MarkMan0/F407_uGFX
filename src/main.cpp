@@ -7,7 +7,7 @@
 #include "comm_api.h"
 #include "mixer_gui.h"
 
-#include "usb_uart.h"
+#include "comm_class.h"
 
 #include "CDC_Adaptor.h"
 
@@ -41,10 +41,10 @@ void monitor_task(void*) {
 
 void uart_task(void*) {
   pin_mode(pins::LED1, pin_mode_t::OUT_PP);
-  auto& uart = USB_UART::get_instance();
+  auto& uart = CommClass::get_instance();
 
   CDC_Adaptor::get_instance().set_receive_cb(
-      [](const void* buff, size_t sz) { USB_UART::get_instance().receive(buff, sz); });
+      [](const void* buff, size_t sz) { CommClass::get_instance().receive(buff, sz); });
   uart.set_hw_msg(&(CDC_Adaptor::get_instance()));
 
   uart.init();

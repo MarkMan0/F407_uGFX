@@ -4,7 +4,6 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "semphr.h"
-#include "ISerial.h"
 #include "IHWMessage.h"
 
 
@@ -15,32 +14,32 @@ namespace UART_TimingConfig {
 };
 
 /// @brief Implementation of Serial interface over USB CDC
-class USB_UART : public ISerial {
+class CommClass {
 public:
   /// @brief get reference to singleton
-  static USB_UART& get_instance() {
-    static USB_UART self;
+  static CommClass& get_instance() {
+    static CommClass self;
     return self;
   }
 
   /// @brief Initialize the USB CDC interface
   void init();
 
-  size_t available() const override;
+  size_t available() const;
 
 
-  size_t wait_for(size_t n) const override;
+  size_t wait_for(size_t n) const;
 
-  size_t write(uint8_t) override;
-  size_t write(const uint8_t* data, size_t len) override;
-  size_t write(const char* str) override;
+  size_t write(uint8_t);
+  size_t write(const uint8_t* data, size_t len);
+  size_t write(const char* str);
 
-  void flush() override;
+  void flush();
 
-  size_t read(uint8_t* buff, size_t max_len) override;
-  size_t read(char* buff, size_t max_len) override;
+  size_t read(uint8_t* buff, size_t max_len);
+  size_t read(char* buff, size_t max_len);
 
-  void empty_rx() override;
+  void empty_rx();
 
   /// @brief Read arbitrary data from the UART
   /// @tparam T type of data to read
@@ -76,28 +75,28 @@ public:
     }
   }
 
-  char c() override {
+  char c() {
     return read<char>();
   }
-  uint8_t u8() override {
+  uint8_t u8() {
     return read<uint8_t>();
   }
-  uint16_t u16() override {
+  uint16_t u16() {
     return read<uint16_t>();
   }
-  uint32_t u32() override {
+  uint32_t u32() {
     return read<uint32_t>();
   }
-  int8_t i8() override {
+  int8_t i8() {
     return read<int8_t>();
   }
-  int16_t i16() override {
+  int16_t i16() {
     return read<int16_t>();
   }
-  int32_t i32() override {
+  int32_t i32() {
     return read<int32_t>();
   }
-  float flt() override {
+  float flt() {
     return read<float>();
   }
 
@@ -119,9 +118,9 @@ public:
   }
 
 private:
-  USB_UART() = default;
-  USB_UART(const USB_UART&) = delete;
-  USB_UART& operator=(const USB_UART&) = delete;
+  CommClass() = default;
+  CommClass(const CommClass&) = delete;
+  CommClass& operator=(const CommClass&) = delete;
   void notify_tx_task();
   xTaskHandle tx_task_{};
   xSemaphoreHandle flush_mtx_{};  ///< flush can be called by user and task, need to lock it

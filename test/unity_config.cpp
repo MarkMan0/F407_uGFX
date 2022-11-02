@@ -5,9 +5,9 @@
 #include "unity_config.h"
 #include "STHAL.h"
 #include <unity.h>
-#include "usb_uart.h"
+#include "comm_class.h"
 
-USB_UART& uart = USB_UART::get_instance();
+CommClass& uart = CommClass::get_instance();
 
 #ifdef __cplusplus
 extern "C" {

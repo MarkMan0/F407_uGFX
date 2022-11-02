@@ -105,7 +105,7 @@ CommAPI::volume_t CommAPI::load_one() {
   return vol;
 }
 
-void CommAPI::init(ISerial* u) {
+void CommAPI::init(CommClass* u) {
   uart_ = u;
   mtx_ = xSemaphoreCreateMutex();
 }
