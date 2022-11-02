@@ -19,9 +19,6 @@ static void USB_UART_receive(const void* buff, size_t size) {
   USB_UART::get_instance().receive(buff, size);
 }
 
-void USB_CDC_Receive_callback(uint8_t* buff, size_t size) {
-  CDC_Adaptor::get_instance().receive(buff, size);
-}
 
 
 void monitor_task(void*) {
