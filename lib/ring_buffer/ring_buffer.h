@@ -4,7 +4,7 @@
  */
 
 #pragma once
-#include "STHAL.h"
+#include "passert.h"
 #include <cstdint>
 #include <array>
 
@@ -64,7 +64,7 @@ public:
 
   /// Take one element from the buffer
   [[nodiscard]] data_t pop() {
-    assert_param(!is_empty());
+    passert(!is_empty());
 
     data_t ret = buff_[tail_];
     tail_ = (tail_ + 1) % N;
@@ -74,14 +74,14 @@ public:
 
   /// Move tail_ pointer by @p n. Essentially deletes the elements
   void pop(size_t n) {
-    assert_param(size() >= n);
+    passert(size() >= n);
     tail_ = (tail_ + n) % N;
     is_full_ = false;
   }
 
   void pop(T* dest, size_t n) {
     /// TODO: optimize
-    assert_param(size() >= n);
+    passert(size() >= n);
     for (size_t i = 0; i < n; ++i) {
       dest[i] = pop();
     }
@@ -89,7 +89,7 @@ public:
 
   /// First element in the buffer
   [[nodiscard]] const data_t& peek() const {
-    assert_param(!is_empty());
+    passert(!is_empty());
     return buff_[tail_];
   }
 
