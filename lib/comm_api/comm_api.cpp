@@ -3,6 +3,7 @@
 #include "utils.h"
 #include <type_traits>
 #include "sem_lock.h"
+#include "passert.h"
 
 namespace mixer {
   enum commands : uint8_t {
@@ -85,14 +86,14 @@ CommAPI::volume_t CommAPI::load_one() {
     return std::nullopt;
   }
   size_t offset = 0;
-  vol.pid_ = mem2T<decltype(vol.pid_ + offset)>(buffer_);
+  vol.pid_ = utils::mem2T<decltype(vol.pid_ + offset)>(buffer_);
   offset += sizeof(vol.pid_);
-  vol.volume_ = mem2T<decltype(vol.volume_)>(buffer_ + offset);
+  vol.volume_ = utils::mem2T<decltype(vol.volume_)>(buffer_ + offset);
   offset += sizeof(vol.volume_);
-  vol.muted_ = mem2T<uint8_t>(buffer_ + offset);
+  vol.muted_ = utils::mem2T<uint8_t>(buffer_ + offset);
   offset += sizeof(uint8_t);
 
-  uint8_t name_len = mem2T<uint8_t>(buffer_ + offset);
+  uint8_t name_len = utils::mem2T<uint8_t>(buffer_ + offset);
 
   if (not verify_read(name_len * sizeof(char))) {
     return std::nullopt;
@@ -108,6 +109,8 @@ CommAPI::volume_t CommAPI::load_one() {
 void CommAPI::init(CommClass* u) {
   uart_ = u;
   mtx_ = xSemaphoreCreateMutex();
+  passert(mtx_);
+  passert(uart_);
 }
 
 /// @details Loading is done in multiple steps.

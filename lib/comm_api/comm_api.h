@@ -10,7 +10,6 @@
 void mixer_api_test();
 #endif
 
-using utils::mem2T;
 
 namespace mixer {
 
