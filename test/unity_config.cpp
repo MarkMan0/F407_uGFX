@@ -6,8 +6,9 @@
 #include "STHAL.h"
 #include <unity.h>
 #include "comm_class.h"
+#include "CDC_Adaptor.h"
 
-CommClass& uart = CommClass::get_instance();
+CommClass uart;
 
 #ifdef __cplusplus
 extern "C" {
@@ -24,6 +25,9 @@ TaskHandle_t handle;
 
 
 void unityOutputStart() {
+  CDC_Adaptor::get_instance().set_receive_cb([](const void* ptr, size_t sz) { uart.receive(ptr, sz); });
+  uart.set_hw_msg(&CDC_Adaptor::get_instance());
+
   uart.init();
   xTaskCreate(dummy_task, "dummy", 64, nullptr, 1, &handle);
   uart.set_tx_task(handle);
