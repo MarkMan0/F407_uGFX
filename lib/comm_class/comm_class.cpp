@@ -1,17 +1,16 @@
-#include "usb_uart.h"
-#include "usbd_cdc.h"
-#include "usb_device.h"
-#include "usbd_cdc_if.h"
+#include "comm_class.h"
 #include "sem_lock.h"
 
 
 
-void USB_UART::init() {
-  MX_USB_DEVICE_Init();
+void CommClass::init() {
+  passert(hw_msg_);
+  hw_msg_->init();
   flush_mtx_ = xSemaphoreCreateMutex();
+  passert(flush_mtx_);
 }
 
-size_t USB_UART::write(const uint8_t* data, size_t len) {
+size_t CommClass::write(const uint8_t* data, size_t len) {
   if (tx_buffer_.free() < len) {
     return 0;
   }
@@ -27,11 +26,11 @@ size_t USB_UART::write(const uint8_t* data, size_t len) {
   return len;
 }
 
-size_t USB_UART::write(const char* str) {
+size_t CommClass::write(const char* str) {
   return write(reinterpret_cast<const uint8_t*>(str), strlen(str));
 }
 
-size_t USB_UART::write(uint8_t c) {
+size_t CommClass::write(uint8_t c) {
   if (tx_buffer_.is_full()) {
     return 0;
   }
@@ -41,11 +40,11 @@ size_t USB_UART::write(uint8_t c) {
 }
 
 
-size_t USB_UART::available() const {
+size_t CommClass::available() const {
   return rx_buffer_.size();
 }
 
-size_t USB_UART::wait_for(size_t n) const {
+size_t CommClass::wait_for(size_t n) const {
   uint32_t cnt = UART_TimingConfig::READ_MAX_RETRY;
   while (available() < n) {
     if (--cnt == 0) {
@@ -56,7 +55,7 @@ size_t USB_UART::wait_for(size_t n) const {
   return available();
 }
 
-size_t USB_UART::read(uint8_t* buff, size_t max_len) {
+size_t CommClass::read(uint8_t* buff, size_t max_len) {
   // TODO improve by copying continuous space
   auto sz = rx_buffer_.size();
   size_t i = 0;
@@ -68,16 +67,16 @@ size_t USB_UART::read(uint8_t* buff, size_t max_len) {
   return i;
 }
 
-size_t USB_UART::read(char* buff, size_t max_len) {
+size_t CommClass::read(char* buff, size_t max_len) {
   return read(reinterpret_cast<uint8_t*>(buff), max_len);
 }
 
-void USB_UART::empty_rx() {
+void CommClass::empty_rx() {
   rx_buffer_.reset();
 }
 
-void USB_UART::flush() {
-  if (hUsbDeviceFS.dev_state != USBD_STATE_CONFIGURED) {
+void CommClass::flush() {
+  if (not hw_msg_->status()) {
     // not connected
     return;
   }
@@ -85,7 +84,7 @@ void USB_UART::flush() {
 
   uint32_t cnt = UART_TimingConfig::WRITE_MAX_RETRY;
   while (auto n = tx_buffer_.size_cont()) {
-    if (USBD_OK == CDC_Transmit_FS(const_cast<uint8_t*>(&tx_buffer_.peek()), n)) {
+    if (n == hw_msg_->transmit(&(tx_buffer_.peek()), n)) {
       tx_buffer_.pop(n);
     } else {
       if (--cnt == 0) {
@@ -96,16 +95,24 @@ void USB_UART::flush() {
   }
 }
 
-void USB_UART::send_task() {
+void CommClass::send_task() {
   xTaskNotifyWait(0, UINT32_MAX, nullptr, portMAX_DELAY);
   flush();
 }
 
 
-void USB_UART::set_tx_task(xTaskHandle h) {
+void CommClass::set_tx_task(xTaskHandle h) {
+  passert(h);
   tx_task_ = h;
 }
 
-void USB_UART::notify_tx_task() {
-  xTaskNotify(tx_task_, 0, eNoAction);
+void CommClass::notify_tx_task() {
+  passert(tx_task_);
+  if (tx_task_) {
+    xTaskNotify(tx_task_, 0, eNoAction);
+  }
+}
+
+void CommClass::receive(const void* buff, size_t len) {
+  rx_buffer_.push(static_cast<const uint8_t*>(buff), len);
 }

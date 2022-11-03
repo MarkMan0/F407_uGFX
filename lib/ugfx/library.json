@@ -10,6 +10,9 @@
         "-Idriver/ginput/touch/ADS7843"
       ],
       "srcDir": ".",
+      "srcFilter": 
+        ["+<*>",
+          "-<src/gdisp/fonts/*>"],
       "unflags": [
           "-Wall"
       ]

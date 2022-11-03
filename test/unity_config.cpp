@@ -5,9 +5,10 @@
 #include "unity_config.h"
 #include "STHAL.h"
 #include <unity.h>
-#include "usb_uart.h"
+#include "comm_class.h"
+#include "CDC_Adaptor.h"
 
-USB_UART& uart = USB_UART::get_instance();
+CommClass uart;
 
 #ifdef __cplusplus
 extern "C" {
@@ -22,8 +23,13 @@ static void dummy_task(void*) {
 }
 TaskHandle_t handle;
 
-
+static void callback(const void* ptr, size_t sz) {
+  uart.receive(ptr, sz);
+}
 void unityOutputStart() {
+  CDC_Adaptor::get_instance().set_receive_cb(callback);
+  uart.set_hw_msg(&CDC_Adaptor::get_instance());
+
   uart.init();
   xTaskCreate(dummy_task, "dummy", 64, nullptr, 1, &handle);
   uart.set_tx_task(handle);

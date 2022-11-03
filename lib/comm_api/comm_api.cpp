@@ -3,6 +3,7 @@
 #include "utils.h"
 #include <type_traits>
 #include "sem_lock.h"
+#include "passert.h"
 
 namespace mixer {
   enum commands : uint8_t {
@@ -41,10 +42,10 @@ bool CommAPI::verify_read(size_t n) {
 
   // read data
   for (i = 0; i < n; ++i) {
-    buffer_[i] = uart_->u8();
+    buffer_[i] = uart_->read<uint8_t>();
   }
   auto crc = utils::crc32mpeg2(buffer_, n);
-  uint32_t crc_in = uart_->u32();
+  uint32_t crc_in = uart_->read<uint32_t>();
 
   return crc == crc_in;
 }
@@ -85,14 +86,14 @@ CommAPI::volume_t CommAPI::load_one() {
     return std::nullopt;
   }
   size_t offset = 0;
-  vol.pid_ = mem2T<decltype(vol.pid_ + offset)>(buffer_);
+  vol.pid_ = utils::mem2T<decltype(vol.pid_ + offset)>(buffer_);
   offset += sizeof(vol.pid_);
-  vol.volume_ = mem2T<decltype(vol.volume_)>(buffer_ + offset);
+  vol.volume_ = utils::mem2T<decltype(vol.volume_)>(buffer_ + offset);
   offset += sizeof(vol.volume_);
-  vol.muted_ = mem2T<uint8_t>(buffer_ + offset);
+  vol.muted_ = utils::mem2T<uint8_t>(buffer_ + offset);
   offset += sizeof(uint8_t);
 
-  uint8_t name_len = mem2T<uint8_t>(buffer_ + offset);
+  uint8_t name_len = utils::mem2T<uint8_t>(buffer_ + offset);
 
   if (not verify_read(name_len * sizeof(char))) {
     return std::nullopt;
@@ -105,9 +106,11 @@ CommAPI::volume_t CommAPI::load_one() {
   return vol;
 }
 
-void CommAPI::init(ISerial* u) {
+void CommAPI::init(CommClass* u) {
   uart_ = u;
   mtx_ = xSemaphoreCreateMutex();
+  passert(mtx_);
+  passert(uart_);
 }
 
 /// @details Loading is done in multiple steps.

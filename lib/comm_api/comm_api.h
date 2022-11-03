@@ -1,6 +1,6 @@
 #pragma once
 #include <optional>
-#include "ISerial.h"
+#include "comm_class.h"
 #include "utils.h"
 #include <array>
 #include "FreeRTOS.h"
@@ -10,7 +10,6 @@
 void mixer_api_test();
 #endif
 
-using utils::mem2T;
 
 namespace mixer {
 
@@ -79,7 +78,7 @@ public:
 
   /// @brief Initialize the singleton, set uart, create mutex
   /// @param uart the UART for communication with PC
-  void init(ISerial* uart);
+  void init(CommClass* uart);
 
   /// @brief retrieve reference to singleton
   /// @return refernece
@@ -111,7 +110,7 @@ private:
   /// @return session info or std::nullopt
   volume_t load_one();
   std::array<volume_t, MAX_SUPPORTED_PROGRAMS> volumes_;
-  ISerial* uart_;
+  CommClass* uart_;
   static inline constexpr size_t BUFF_SZ = 256;
   uint8_t buffer_[BUFF_SZ];  ///< used for CRC and serial communication
   SemaphoreHandle_t mtx_;

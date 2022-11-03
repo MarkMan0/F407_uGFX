@@ -7,13 +7,12 @@
 #include "comm_api.h"
 #include "mixer_gui.h"
 
-#include "usb_uart.h"
+#include "comm_class.h"
+
+#include "CDC_Adaptor.h"
 
 
-
-void USB_CDC_Receive_callback(uint8_t* buff, size_t size) {
-  USB_UART::get_instance().rx_buffer_.push(buff, size);
-}
+static CommClass uart;
 
 void monitor_task(void*) {
   vTaskDelay(pdMS_TO_TICKS(30000));
@@ -43,7 +42,10 @@ void monitor_task(void*) {
 
 void uart_task(void*) {
   pin_mode(pins::LED1, pin_mode_t::OUT_PP);
-  auto& uart = USB_UART::get_instance();
+
+  CDC_Adaptor::get_instance().set_receive_cb([](const void* buff, size_t sz) { uart.receive(buff, sz); });
+  uart.set_hw_msg(&(CDC_Adaptor::get_instance()));
+
   uart.init();
   uart.set_tx_task(xTaskGetCurrentTaskHandle());
   CommAPI::get_instance().init(&uart);

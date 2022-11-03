@@ -3,6 +3,9 @@
   #include "ring_buffer.h"
   #include "unity.h"
 
+  #ifndef UNUSED
+    #define UNUSED(x) (void)(x)
+  #endif
 
 void test_buffer_create() {
   RingBuffer<uint8_t, 10> buffer;
