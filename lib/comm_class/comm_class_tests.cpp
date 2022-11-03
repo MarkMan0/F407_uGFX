@@ -28,6 +28,7 @@ static void call_receive(T data) {
 }
 
 static void msetUp() {
+  comm.set_tx_task(xTaskGetCurrentTaskHandle());
   comm.set_hw_msg(&mock.get());
   mock.get().IHWMessage::set_receive_cb(cb);
   When(Method(mock, status)).AlwaysReturn(true);

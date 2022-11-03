@@ -5,6 +5,7 @@
 #include "task.h"
 #include "semphr.h"
 #include "IHWMessage.h"
+#include "passert.h"
 
 #ifdef TESTING
 void comm_class_test();
@@ -89,6 +90,7 @@ public:
   /// @brief set the adaptor from the hardware
   /// @param msg pointer to class implementing interface
   void set_hw_msg(IHWMessage* msg) {
+    passert(msg);
     hw_msg_ = msg;
   }
 

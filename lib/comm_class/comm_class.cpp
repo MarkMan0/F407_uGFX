@@ -4,8 +4,10 @@
 
 
 void CommClass::init() {
+  passert(hw_msg_);
   hw_msg_->init();
   flush_mtx_ = xSemaphoreCreateMutex();
+  passert(flush_mtx_);
 }
 
 size_t CommClass::write(const uint8_t* data, size_t len) {
@@ -100,10 +102,12 @@ void CommClass::send_task() {
 
 
 void CommClass::set_tx_task(xTaskHandle h) {
+  passert(h);
   tx_task_ = h;
 }
 
 void CommClass::notify_tx_task() {
+  passert(tx_task_);
   if (tx_task_) {
     xTaskNotify(tx_task_, 0, eNoAction);
   }
