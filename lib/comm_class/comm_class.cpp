@@ -104,7 +104,9 @@ void CommClass::set_tx_task(xTaskHandle h) {
 }
 
 void CommClass::notify_tx_task() {
-  xTaskNotify(tx_task_, 0, eNoAction);
+  if (tx_task_) {
+    xTaskNotify(tx_task_, 0, eNoAction);
+  }
 }
 
 void CommClass::receive(const void* buff, size_t len) {
