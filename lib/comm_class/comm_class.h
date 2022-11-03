@@ -6,6 +6,10 @@
 #include "semphr.h"
 #include "IHWMessage.h"
 
+#ifdef TESTING
+void comm_class_test();
+#endif
+
 
 /// @brief Define basic timeouts for UART
 namespace UART_TimingConfig {

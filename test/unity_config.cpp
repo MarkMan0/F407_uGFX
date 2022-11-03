@@ -23,9 +23,11 @@ static void dummy_task(void*) {
 }
 TaskHandle_t handle;
 
-
+static void callback(const void* ptr, size_t sz) {
+  uart.receive(ptr, sz);
+}
 void unityOutputStart() {
-  CDC_Adaptor::get_instance().set_receive_cb([](const void* ptr, size_t sz) { uart.receive(ptr, sz); });
+  CDC_Adaptor::get_instance().set_receive_cb(callback);
   uart.set_hw_msg(&CDC_Adaptor::get_instance());
 
   uart.init();

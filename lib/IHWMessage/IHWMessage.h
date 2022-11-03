@@ -26,6 +26,13 @@ public:
     receive_cb_ = receive_cb;
   }
 
+  /// @brief This is called from the CDC interrupt. Forwards data to receive callback
+  virtual void receive(void* buff, size_t sz) {
+    if (receive_cb_) {
+      receive_cb_(buff, sz);
+    }
+  }
+
   /// @brief Deinitialize the hardware interface
   virtual void deinit() = 0;
 

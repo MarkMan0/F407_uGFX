@@ -28,12 +28,6 @@ public:
     return hUsbDeviceFS.dev_state == USBD_STATE_CONFIGURED;
   }
 
-  /// @brief This is called from the CDC interrupt. Forwards data to receive callback
-  void receive(void* buff, size_t sz) {
-    if (receive_cb_) {
-      receive_cb_(buff, sz);
-    }
-  }
 
   void deinit() override {
   }
