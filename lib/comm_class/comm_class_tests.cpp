@@ -7,6 +7,13 @@
   #include "comm_class.h"
   #include <unity.h>
 
+  #define M_RUN_TEST(tst)                                                                                              \
+    do {                                                                                                               \
+      msetUp();                                                                                                        \
+      RUN_TEST(tst);                                                                                                   \
+      mtearDown();                                                                                                     \
+    } while (0)
+
 using namespace fakeit;
 
 Mock<IHWMessage> mock;
@@ -20,13 +27,13 @@ static void call_receive(T data) {
   mock.get().IHWMessage::receive(&data, sizeof(data));
 }
 
-void setUp() {
+static void msetUp() {
   comm.set_hw_msg(&mock.get());
   mock.get().IHWMessage::set_receive_cb(cb);
   When(Method(mock, status)).AlwaysReturn(true);
 }
 
-void tearDown() {
+static void mtearDown() {
   comm.empty_rx();
   When(Method(mock, transmit)).AlwaysDo([](const void* p, size_t sz) { return sz; });
   comm.flush();
@@ -80,11 +87,11 @@ void test_write() {
 }
 
 void comm_class_test() {
-  RUN_TEST(test_init_called);
-  RUN_TEST(test_available);
-  RUN_TEST(test_read_buff);
-  RUN_TEST(test_read_any);
-  RUN_TEST(test_write);
+  M_RUN_TEST(test_init_called);
+  M_RUN_TEST(test_available);
+  M_RUN_TEST(test_read_buff);
+  M_RUN_TEST(test_read_any);
+  M_RUN_TEST(test_write);
 }
 
 #endif

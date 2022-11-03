@@ -1,120 +1,115 @@
 #ifdef TESTING
   #include "comm_api.h"
-  #include "ISerial.h"
   #include "fakeit.hpp"
   #include "unity.h"
 
 // create mock
 
-namespace MockHelp {
-
-  static size_t buf_len = 0;
-  static size_t read_idx = 0;
-  static uint8_t buff[100] = { 0 };
-  static const mixer::ProgramVolume volume(100, 30, "Hello World");
-
-  uint8_t read_u8() {
-    return buff[read_idx++];
-  }
-  uint32_t read_u32() {
-    auto val = utils::mem2T<uint32_t>(buff + read_idx);
-    read_idx += 4;
-    return val;
-  }
-  size_t available() {
-    return buf_len - read_idx;
-  }
-  size_t wait_for(size_t n) {
-    return n;
-  }
-
-  void populate_buff() {
-    read_idx = 0;
-    buf_len = 0;
-    unsigned idx = 0;
-    auto insert = [&idx](auto what) -> void {
-      memcpy(buff + idx, &what, sizeof(what));
-      idx += sizeof(what);
-    };
-
-    auto crc_from_to = [](unsigned from, unsigned to) -> uint32_t { return utils::crc32mpeg2(buff + from, to - from); };
-
-    // one entry
-    insert((uint8_t)1);
-    insert(crc_from_to(0, 1));
-
-    const uint8_t name_sz = strlen(volume.name_) + 1;
-
-    auto from = idx;
-    insert(volume.pid_);
-    insert(volume.volume_);
-    insert(static_cast<uint8_t>(volume.muted_));
-    insert(name_sz);
-    insert(crc_from_to(from, idx));
-
-    from = idx;
-    memcpy(buff + idx, volume.name_, name_sz);
-    idx += name_sz;
-    insert(crc_from_to(from, idx));
-
-    buf_len = idx;
-  }
-}  // namespace MockHelp
+using namespace fakeit;
+  #define M_RUN_TEST(tst)                                                                                              \
+    do {                                                                                                               \
+      msetUp();                                                                                                        \
+      RUN_TEST(tst);                                                                                                   \
+      mtearDown();                                                                                                     \
+    } while (0)
 
 
-fakeit::Mock<ISerial> create_mock() {
-  using namespace fakeit;
-  fakeit::Mock<ISerial> mock;
+static Mock<IHWMessage> mock;
+static CommClass comm;
 
-  When(Method(mock, available)).AlwaysDo(MockHelp::available);
-  When(Method(mock, u8)).AlwaysDo(MockHelp::read_u8);
-  When(Method(mock, u32)).AlwaysDo(MockHelp::read_u32);
-  When(Method(mock, wait_for)).AlwaysDo(MockHelp::wait_for);
+static void cb(const void* ptr, size_t sz) {
+  comm.receive(ptr, sz);
+}
 
+template <class T>
+static void call_receive(T data) {
+  mock.get().IHWMessage::receive(&data, sizeof(data));
+}
 
-  Fake(OverloadedMethod(mock, write, size_t(uint8_t)));
-  Fake(OverloadedMethod(mock, write, size_t(const uint8_t*, size_t)));
-  Fake(OverloadedMethod(mock, write, size_t(const char*)));
+static void call_receive(void* data, size_t sz) {
+  mock.get().IHWMessage::receive(data, sz);
+}
 
-  Fake(Method(mock, flush));
+static void msetUp() {
+  comm.set_hw_msg(&mock.get());
+  mock.get().IHWMessage::set_receive_cb(cb);
+  When(Method(mock, status)).AlwaysReturn(true);
+  When(Method(mock, init)).Return();
+  When(Method(mock, transmit)).AlwaysDo([](const void* data, size_t sz) { return sz; });
+}
 
-  Fake(OverloadedMethod(mock, read, size_t(uint8_t*, size_t)));
-  Fake(OverloadedMethod(mock, read, size_t(char*, size_t)));
+static void mtearDown() {
+  comm.empty_rx();
+  When(Method(mock, transmit)).AlwaysDo([](const void* p, size_t sz) { return sz; });
+  comm.flush();
+  mock.Reset();
+}
 
-  Fake(Method(mock, empty_rx));
+static const mixer::ProgramVolume volume(100, 30, "Hello World");
 
-  Fake(Method(mock, c));
-  Fake(Method(mock, u16));
-  Fake(Method(mock, i8));
-  Fake(Method(mock, i16));
-  Fake(Method(mock, i32));
-  Fake(Method(mock, flt));
+static constexpr size_t buff_sz = 100;
+static uint8_t buff[buff_sz] = { 0 };
 
-  return mock;
+static size_t populate_buff_with_load() {
+  memset(buff, 0, buff_sz);
+  size_t buf_len = 0;
+  unsigned idx = 0;
+  auto insert = [&idx](auto what) -> void {
+    memcpy(buff + idx, &what, sizeof(what));
+    idx += sizeof(what);
+  };
+
+  auto crc_from_to = [](unsigned from, unsigned to) -> uint32_t { return utils::crc32mpeg2(buff + from, to - from); };
+
+  // one entry
+  insert((uint8_t)1);
+  insert(crc_from_to(0, 1));
+
+  const uint8_t name_sz = strlen(volume.name_) + 1;
+
+  auto from = idx;
+  insert(volume.pid_);
+  insert(volume.volume_);
+  insert(static_cast<uint8_t>(volume.muted_));
+  insert(name_sz);
+  insert(crc_from_to(from, idx));
+
+  from = idx;
+  memcpy(buff + idx, volume.name_, name_sz);
+  idx += name_sz;
+  insert(crc_from_to(from, idx));
+
+  buf_len = idx;
+
+  return buf_len;
 }
 
 
-auto mock = create_mock();
-void test_sequence() {
-  MockHelp::populate_buff();
-  CommAPI& api = CommAPI::get_instance();
-  api.init(&(mock.get()));
 
+void test_load_volumes() {
+  comm.init();
+  CommAPI& api = CommAPI::get_instance();
+
+  api.init(&comm);
+
+  When(Method(mock, transmit)).AlwaysDo([](const void* data, size_t sz) {
+    if (sz >= 1 && *static_cast<const uint8_t*>(data) == 0x01) {
+      call_receive(buff, populate_buff_with_load());
+    }
+    return sz;
+  });
 
   api.load_volumes();
   std::optional opt = api.get_volumes()[0];
   TEST_ASSERT_TRUE(opt.has_value());
-  volatile bool b = opt.has_value();
-  auto ret = *opt;
-  auto exp = MockHelp::volume;
 
-  TEST_ASSERT_EQUAL_UINT32(exp.pid_, ret.pid_);
-  TEST_ASSERT_EQUAL_UINT8(exp.volume_, ret.volume_);
-  TEST_ASSERT_EQUAL_STRING(exp.name_, ret.name_);
+  TEST_ASSERT_EQUAL_UINT32(volume.pid_, opt->pid_);
+  TEST_ASSERT_EQUAL_UINT8(volume.volume_, opt->volume_);
+  TEST_ASSERT_EQUAL_STRING(volume.name_, opt->name_);
 }
 
 void mixer_api_test() {
-  RUN_TEST(test_sequence);
+  M_RUN_TEST(test_load_volumes);
 }
 
 #endif
