@@ -11,7 +11,7 @@ The display uses the *ILI9341* chip for the LCD and *ADS7843* for the resistive 
 ## Project Structure
 The project is built in Platformio, and it's based on ST HAL libraries. No external library is used, and it's ready to build after download, Platformio will handle the dependencies. The application runs on FreeRTOS.
 
-Communication to the PC application is via USB CDC and is verified by CRC at the end of messages. Porting to different communication method is possible. One would need to implement the `ISerial` interface and pass it to `CommAPI`.
+Communication to the PC application is via USB CDC and is verified by CRC at the end of messages. Porting to different communication method is possible. One would need to implement the `IHWMessage` interface and create a `comm_class` from it. For inspiration, look at `CDC_Adaptor` and `comm_class`.
 
 The display is connected through FSMC, the GUI library is [µGFX](https://ugfx.io/). The library is easily portable and has support for many displays.
 
@@ -19,8 +19,9 @@ The display is connected through FSMC, the GUI library is [µGFX](https://ugfx.i
 Here I list the components, which are located in the `lib/` folder.
 
 + [FakeIt](https://github.com/eranpeer/FakeIt) - C++ mocking framework
-+ ISerial - the serial interface definition, used by *comm_api*
-+ usb_uart - implements *ISerial* for USB CDC communication
++ IHWMessage - the interface to be implemented for a communication hardware (CDC, UART..). Has methods to init, transmit bytes and callback on receive.
++ CDC_Adaptor - `IHWMessage` implementation for USB CDC.
++ comm_class - Handles buffering and memory to type conversion from a serial interface through the `IHWMessage` interface. "Glueing" the interface to the instance of this class is done in `main.cpp`.
 + comm_api - the API to communicate with the PC application, and read/write mixer volumes
 + FreeRTOS - the official FreeRTOS as Platformio library
 + mixer_gui - the GUI task
@@ -34,7 +35,7 @@ Here I list the components, which are located in the `lib/` folder.
 ### Unit testing
 The testing framework is Unity, and tests are run on the hardware.
 
-Mocking is also supported, using FakeIt. Take a look at the [Mixer API test](lib\comm_api\comm_api_test.cpp) for reference.
+Mocking is also supported, using FakeIt. Take a look at the [Comm Class tests](lib\comm_class\comm_class_tests.cpp) or [Mixer API test](lib\comm_api\comm_api_test.cpp) for reference.
 
 Unit tests are run in a FreeRTOS environment. The FreeRTOS is started from [test_main](test/test_main.cpp). Each test is required to create a `void test_task(void*)` function, which will call the tests. This function must return, so unity can finish correctly.
 
@@ -49,5 +50,6 @@ The project should build out of the box. The *test* environment cannot be built,
 ## TO-DO
 There is always room for improvement. These improvements only consider this Platformio project, without the PC app.
 
-1. Fix TODOs in the code
-1. Implement backlight control
+- [ ] Fix TODOs in the code
+- [ ] Implement backlight control
+- [x] Move the message interface one layer up
