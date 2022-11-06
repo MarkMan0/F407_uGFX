@@ -68,7 +68,7 @@ CommAPI::ret_t CommAPI::load_volumes() {
     volumes_[i] = std::nullopt;
   }
 
-  for (unsigned i = 0; i < n_data; ++i) {
+  for (unsigned i = 0; i < n_data && i < MAX_SUPPORTED_PROGRAMS; ++i) {
     volumes_[i] = load_one();
     if (not volumes_[i]) {
       return comm_failure();
