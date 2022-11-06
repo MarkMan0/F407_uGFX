@@ -2,6 +2,8 @@
 
 Gadget, to change volume levels of windows applications, like in the GUI.
 
+<img src="images/demo.gif" alt="drawing" width="400px"/>
+
 ## Hardware
 
 The MCU is and [STM32F407VET6](https://www.st.com/en/microcontrollers-microprocessors/stm32f407ve.html). It's seated on a [Black-F407VET6 board](https://stm32-base.org/boards/STM32F407VET6-STM32-F4VE-V2.0.html).
