@@ -206,7 +206,7 @@ void CommAPI::set_mute(int16_t pid, bool mute) {
 }
 
 
-bool CommAPI::changes() {
+uint8_t CommAPI::changes() {
   utils::Lock lck(mtx_);
   uart_->flush();
   uart_->empty_rx();
@@ -216,9 +216,13 @@ bool CommAPI::changes() {
   uart_->flush();
 
   if (not verify_read(sizeof(uint8_t))) {
-    return false;
+    return 2;
   }
-  return *buffer_;
+  if (*buffer_) {
+    return 0;
+  } else {
+    return 1;
+  }
 }
 
 CommAPI::ret_t CommAPI::comm_failure() {

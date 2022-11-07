@@ -68,8 +68,8 @@ public:
   void echo(const char* str);
 
   /// @brief check if sessions have changed since last check
-  /// @return true if sessions have changed
-  bool changes();
+  /// @return 0 if changes, 1 if no changes, 2 on comm failure
+  uint8_t changes();
 
   /// @brief return reference to internal buffer of sessions
   const std::array<volume_t, MAX_SUPPORTED_PROGRAMS>& get_volumes() const {
