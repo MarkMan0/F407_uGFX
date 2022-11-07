@@ -6,6 +6,8 @@
 #include <optional>
 
 static constexpr uint32_t MAX_LINES = 5;
+static void gui_sleep(uint32_t ms);
+static void gui_redraw();
 
 static CommAPI& api = CommAPI::get_instance();
 
@@ -220,40 +222,76 @@ void mixer_gui_task() {
     helper.init();
   }
 
+  enum gui_mode_t : uint8_t {
+    NEED_DRAW = 1,
+    NEED_SLEEP = 2,
+  };
+  uint8_t gui_mode = NEED_DRAW;
+
   while (1) {
     // wait for user input
     GEvent* pe = geventEventWait(&gl, 1000);
 
     if (pe) {
+      gui_mode = NEED_DRAW;
       // if input, handle it in widgets
       for (auto& obj : gui_objs) {
         obj.handle_event(pe);
       }
     }
 
-    // check if we have a reason to redraw
-    if (not pe && not api.changes()) {
-      continue;
+    switch (api.changes()) {
+      case 0:  // new changes in volumes
+        gui_mode = NEED_DRAW;
+        break;
+      case 1:  // no new changes
+        break;
+      case 2:  // comm failure
+        if (api.since_last_success() > (30 * 1000)) {
+          // 30 seconds elapsed since last successful message
+          gui_mode |= NEED_SLEEP;
+        }
+        break;
+      default:
+        break;
     }
 
-    // something is new, load the volumes
-    if (CommAPI::ret_t::OK != api.load_volumes() || (not api.get_volumes()[0])) {
-      continue;
+    if (gui_mode & NEED_DRAW) {
+      gui_mode &= ~(NEED_DRAW);
+      gui_mode &= ~(NEED_SLEEP);
+      gui_redraw();
     }
+    if (gui_mode & NEED_SLEEP) {
+      gui_sleep(60 * 1000);
+    }
+  }
+}
 
-    // draw the volumes one by one
-    unsigned line = 0;
-    for (const auto& vol : api.get_volumes()) {
-      if (vol) {
-        auto& curr = gui_objs[line];
-        ++line;
-        curr.set_volume(*vol);
-        curr.render();
-      }
+
+static void gui_sleep(uint32_t ms) {
+  gdispSetBacklight(0);
+  vTaskDelay(pdMS_TO_TICKS(ms));
+}
+
+static void gui_redraw() {
+  gdispSetBacklight(100);
+  // something is new, load the volumes
+  if (CommAPI::ret_t::OK != api.load_volumes() || (not api.get_volumes()[0])) {
+    return;
+  }
+
+  // draw the volumes one by one
+  unsigned line = 0;
+  for (const auto& vol : api.get_volumes()) {
+    if (vol) {
+      auto& curr = gui_objs[line];
+      ++line;
+      curr.set_volume(*vol);
+      curr.render();
     }
-    // clear the rest of the lines
-    for (; line < gui_objs.size(); ++line) {
-      gui_objs[line].reset();
-    }
+  }
+  // clear the rest of the lines
+  for (; line < gui_objs.size(); ++line) {
+    gui_objs[line].reset();
   }
 }

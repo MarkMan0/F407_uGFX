@@ -218,6 +218,7 @@ uint8_t CommAPI::changes() {
   if (not verify_read(sizeof(uint8_t))) {
     return 2;
   }
+  last_successful_comm_ = xTaskGetTickCount();
   if (*buffer_) {
     return 0;
   } else {
