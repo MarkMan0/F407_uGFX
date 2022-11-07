@@ -232,5 +232,10 @@ CommAPI::ret_t CommAPI::comm_success() {
   uart_->write(CRC_Cache::response_ok.data(), CRC_Cache::response_ok.size());
   uart_->flush();
   uart_->empty_rx();
+  last_successful_comm_ = xTaskGetTickCount();
   return ret_t::OK;
+}
+
+TickType_t CommAPI::since_last_success() const {
+  return xTaskGetTickCount() - last_successful_comm_;
 }

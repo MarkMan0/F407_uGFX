@@ -80,6 +80,9 @@ public:
   /// @param uart the UART for communication with PC
   void init(CommClass* uart);
 
+  /// @brief Time since last successful communication in os ticks
+  TickType_t since_last_success() const;
+
   /// @brief retrieve reference to singleton
   /// @return refernece
   static CommAPI& get_instance() {
@@ -109,6 +112,7 @@ private:
   /// @brief Load a session from the UART
   /// @return session info or std::nullopt
   volume_t load_one();
+  TickType_t last_successful_comm_ = 0;
   std::array<volume_t, MAX_SUPPORTED_PROGRAMS> volumes_;
   CommClass* uart_;
   static inline constexpr size_t BUFF_SZ = 256;
