@@ -27,7 +27,7 @@ size_t CommClass::write(const uint8_t* data, size_t len) {
 }
 
 size_t CommClass::write(const char* str) {
-  return write(reinterpret_cast<const uint8_t*>(str), strlen(str));
+  return write(reinterpret_cast<const uint8_t*>(str), strlen(str) + 1);
 }
 
 size_t CommClass::write(uint8_t c) {
