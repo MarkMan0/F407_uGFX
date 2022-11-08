@@ -217,7 +217,8 @@ enum gui_state_t : uint8_t {
 
 enum gui_event : uint8_t {
   NOEVENT,
-  INPUT,
+  UI_INPUT,
+  CHANGE,
   SERIAL_ERROR,
   SERIAL_TIMEOUT,
   NUM_EVENTS,
@@ -242,17 +243,19 @@ static constexpr transition_map_t create_transitions() {
   t[WAKEUP] = filled_event_arr(DRAW);
   // from DRAW default to IDLE, except...
   t[DRAW] = filled_event_arr(IDLE);
-  t[DRAW][INPUT] = DRAW;
+  t[DRAW][CHANGE] = DRAW;
+  t[DRAW][UI_INPUT] = DRAW;
   // from IDLE ...
   t[IDLE] = filled_event_arr(IDLE);
-  t[IDLE][INPUT] = DRAW;
+  t[IDLE][CHANGE] = DRAW;
+  t[IDLE][UI_INPUT] = DRAW;
   t[IDLE][SERIAL_TIMEOUT] = GOSLEEP;
   // from GOSLEEP
   t[GOSLEEP] = filled_event_arr(SLEEPING);
-  t[GOSLEEP][INPUT] = WAKEUP;
+  t[GOSLEEP][CHANGE] = WAKEUP;
   // from SLEEPING
   t[SLEEPING] = filled_event_arr(SLEEPING);
-  t[SLEEPING][INPUT] = WAKEUP;
+  t[SLEEPING][CHANGE] = WAKEUP;
 
   return t;
 }
@@ -286,7 +289,7 @@ void mixer_gui_task() {
     GEvent* pe = geventEventWait(&gl, timeout);
 
     if (pe) {
-      event = gui_event::INPUT;
+      event = gui_event::UI_INPUT;
       // if input, handle it in widgets
       for (auto& obj : gui_objs) {
         obj.handle_event(pe);
@@ -295,7 +298,7 @@ void mixer_gui_task() {
 
     switch (api.changes()) {
       case 0:  // new changes in volumes
-        event = gui_event::INPUT;
+        event = gui_event::CHANGE;
         break;
       case 1:  // no new changes
         break;
@@ -344,7 +347,6 @@ void mixer_gui_task() {
 
 
 static void gui_redraw() {
-  gdispSetBacklight(100);
   // something is new, load the volumes
   if (CommAPI::ret_t::OK != api.load_volumes() || (not api.get_volumes()[0])) {
     return;
