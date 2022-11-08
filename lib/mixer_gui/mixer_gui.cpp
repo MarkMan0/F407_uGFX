@@ -6,7 +6,6 @@
 #include <optional>
 
 static constexpr uint32_t MAX_LINES = 5;
-static void gui_sleep(uint32_t ms);
 static void gui_redraw();
 
 static CommAPI& api = CommAPI::get_instance();
@@ -207,6 +206,60 @@ std::array<SetVolumeHelper, MAX_LINES> gui_objs = { SetVolumeHelper(0), SetVolum
 
 
 
+enum gui_state_t : uint8_t {
+  WAKEUP,
+  DRAW,
+  IDLE,
+  GOSLEEP,
+  SLEEPING,
+  NUM_STATES,
+};
+
+enum gui_event : uint8_t {
+  NOEVENT,
+  INPUT,
+  SERIAL_ERROR,
+  SERIAL_TIMEOUT,
+  NUM_EVENTS,
+};
+
+/// @brief 2D array of size NUM_STATES x NUM_EVENTS, where index [i][j] contains the state to go to from state \e i on
+/// event \e j
+using transition_map_t = std::array<std::array<gui_state_t, NUM_EVENTS>, NUM_STATES>;
+
+static constexpr std::array<gui_state_t, NUM_EVENTS> filled_event_arr(gui_state_t e) {
+  std::array<gui_state_t, NUM_EVENTS> arr{};
+  for (int i = 0; i < NUM_EVENTS; ++i) {
+    arr[i] = e;
+  }
+  return arr;
+}
+
+static constexpr transition_map_t create_transitions() {
+  transition_map_t t{};
+
+  // from always WAKEUP go to DRAW
+  t[WAKEUP] = filled_event_arr(DRAW);
+  // from DRAW default to IDLE, except...
+  t[DRAW] = filled_event_arr(IDLE);
+  t[DRAW][INPUT] = DRAW;
+  // from IDLE ...
+  t[IDLE] = filled_event_arr(IDLE);
+  t[IDLE][INPUT] = DRAW;
+  t[IDLE][SERIAL_TIMEOUT] = GOSLEEP;
+  // from GOSLEEP
+  t[GOSLEEP] = filled_event_arr(SLEEPING);
+  t[GOSLEEP][INPUT] = WAKEUP;
+  // from SLEEPING
+  t[SLEEPING] = filled_event_arr(SLEEPING);
+  t[SLEEPING][INPUT] = WAKEUP;
+
+  return t;
+}
+
+static constexpr auto transitions = create_transitions();
+
+
 void mixer_gui_task() {
   font = gdispOpenFont("DejaVuSans12*");
   gwinSetDefaultStyle(&BlackWidgetStyle, false);
@@ -222,18 +275,18 @@ void mixer_gui_task() {
     helper.init();
   }
 
-  enum gui_mode_t : uint8_t {
-    NEED_DRAW = 1,
-    NEED_SLEEP = 2,
-  };
-  uint8_t gui_mode = NEED_DRAW;
+  gui_state_t state = gui_state_t::WAKEUP;
 
   while (1) {
-    // wait for user input
-    GEvent* pe = geventEventWait(&gl, 1000);
+    // gather events
+    gui_event event = gui_event::NOEVENT;
+
+    // wait for user input, no timeout if drawing
+    const gDelay timeout = state == DRAW ? 0 : 1000;
+    GEvent* pe = geventEventWait(&gl, timeout);
 
     if (pe) {
-      gui_mode = NEED_DRAW;
+      event = gui_event::INPUT;
       // if input, handle it in widgets
       for (auto& obj : gui_objs) {
         obj.handle_event(pe);
@@ -242,36 +295,53 @@ void mixer_gui_task() {
 
     switch (api.changes()) {
       case 0:  // new changes in volumes
-        gui_mode = NEED_DRAW;
+        event = gui_event::INPUT;
         break;
       case 1:  // no new changes
         break;
       case 2:  // comm failure
+        event = gui_event::SERIAL_ERROR;
         if (api.since_last_success() > (30 * 1000)) {
           // 30 seconds elapsed since last successful message
-          gui_mode |= NEED_SLEEP;
+          event = gui_event::SERIAL_TIMEOUT;
         }
         break;
       default:
         break;
     }
 
-    if (gui_mode & NEED_DRAW) {
-      gui_mode &= ~(NEED_DRAW);
-      gui_mode &= ~(NEED_SLEEP);
-      gui_redraw();
+    // do the state machine
+    switch (state) {
+      case gui_state_t::WAKEUP:
+        // turn on backlight
+        gdispSetBacklight(100);
+        break;
+
+      case gui_state_t::DRAW:
+        gui_redraw();
+        break;
+
+      case gui_state_t::IDLE:
+        break;
+
+      case gui_state_t::GOSLEEP:
+        gdispSetBacklight(0);
+        break;
+
+      case gui_state_t::SLEEPING:
+        vTaskDelay(pdMS_TO_TICKS(60 * 1000));
+        break;
+
+      case gui_state_t::NUM_STATES:
+        break;
     }
-    if (gui_mode & NEED_SLEEP) {
-      gui_sleep(60 * 1000);
-    }
+
+    // transition
+    state = transitions[state][event];
   }
 }
 
 
-static void gui_sleep(uint32_t ms) {
-  gdispSetBacklight(0);
-  vTaskDelay(pdMS_TO_TICKS(ms));
-}
 
 static void gui_redraw() {
   gdispSetBacklight(100);
