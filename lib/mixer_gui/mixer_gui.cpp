@@ -332,7 +332,7 @@ void mixer_gui_task() {
         break;
 
       case gui_state_t::SLEEPING:
-        vTaskDelay(pdMS_TO_TICKS(60 * 1000));
+        xTaskNotifyWait(0, UINT32_MAX, nullptr, pdMS_TO_TICKS(60 * 1000));
         break;
 
       case gui_state_t::NUM_STATES:

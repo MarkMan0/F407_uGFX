@@ -53,5 +53,6 @@ The project should build out of the box. The *test* environment cannot be built,
 There is always room for improvement. These improvements only consider this Platformio project, without the PC app.
 
 - [ ] Fix TODOs in the code
-- [ ] Implement backlight control
+- [x] Implement backlight control
+- [ ] Add slider for backlight
 - [x] Move the message interface one layer up
